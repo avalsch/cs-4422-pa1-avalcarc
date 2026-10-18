@@ -155,7 +155,7 @@ def main() -> int:
             stats["wall_clock_seconds"] = time.time() - start_time
             write_stats(stats_path, stats)
             print(
-                f"Done: {stats['pages_fetched']} pages in {stats['wall_clock_seconds']:1f}s",
+                f"Done: {stats['pages_fetched']} pages in {stats['wall_clock_seconds']:.1f}s",
                 file=sys.stderr,
             )
 
