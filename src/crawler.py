@@ -14,9 +14,7 @@ from crawl_config import (
     Config,
 )
 from schema import Stats
-
-
-def write_stats(_path, _stats): ...
+from storage import write_stats
 
 
 def crawl(_config, _pages_f, _log_f, _stats, _stats_path, _start_time): ...
