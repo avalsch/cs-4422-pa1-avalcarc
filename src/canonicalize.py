@@ -2,15 +2,17 @@ from urllib.parse import parse_qsl, urlencode, urljoin, urlsplit, urlunsplit
 
 from w3lib.url import canonicalize_url
 
-TRACKING_PARAMS = [
-    "utm_source",
-    "utm_medium",
-    "utm_campaign",
-    "utm_term",
-    "utm_content",
-    "gclid",
-    "fbclid",
-]
+TRACKING_PARAMS = frozenset(
+    [
+        "utm_source",
+        "utm_medium",
+        "utm_campaign",
+        "utm_term",
+        "utm_content",
+        "gclid",
+        "fbclid",
+    ]
+)
 
 URL_SCHEME_DEFAULT_PORT = {"http": 80, "https": 443}
 
