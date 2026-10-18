@@ -21,3 +21,19 @@ class Config:
     timeout: float = DEFAULT_TIMEOUT
     checkpoint_path: Path | None = None
     random_seed: int | None = None
+
+    def __post_init__(self) -> None:
+        if self.budget < 1:
+            raise ValueError("budget must be >= 1")
+
+        if self.delay < 0:
+            raise ValueError("delay must be >= 0")
+
+        if self.timeout <= 0:
+            raise ValueError("timeout must be > 0")
+
+        if self.max_bytes < 1:
+            raise ValueError("max_bytes must be >= 1")
+
+        if self.max_redirects < 0:
+            raise ValueError("max_redirects must be >= 0")
