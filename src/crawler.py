@@ -23,7 +23,10 @@ def canonicalize(url: str, base: str | None = None) -> str | None:
         url = urljoin(base, url)
 
     # mechanical normalization
-    canon = canonicalize_url(url, keep_fragments=False)
+    try:
+        canon = canonicalize_url(url, keep_fragments=False)
+    except:  # noqa: E722
+        return None
 
     parts = urlsplit(canon)
 
@@ -46,7 +49,7 @@ def canonicalize(url: str, base: str | None = None) -> str | None:
 
     # drop schema-default ports
     if port == URL_SCHEME_DEFAULT_PORT[scheme]:
-        netloc = host
+        netloc = netloc.removesuffix(f":{port}")
 
     # drop trailing slash (canonicalize_url handles the rest)
     if path != "/":

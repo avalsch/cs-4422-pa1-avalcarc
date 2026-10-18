@@ -66,6 +66,12 @@ def test_rejects_non_http_schemes():
     assert canonicalize("mailto:foo@bar.com") is None
     assert canonicalize("javascript:void(0)") is None
 
+def test_invalid_port_returns_none():
+    assert canonicalize("http://kennesaw.edu:abc/x") is None
+
+def test_preserves_user_info_when_dropping_default_port():
+    assert canonicalize("http://user:pass@kennesaw.edu:80") == "http://user:pass@kennesaw.edu/"
+
 
 def test_empty():
     assert canonicalize("") is None
