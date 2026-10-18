@@ -25,7 +25,7 @@ def canonicalize(url: str, base: str | None = None) -> str | None:
     # mechanical normalization
     try:
         canon = canonicalize_url(url, keep_fragments=False)
-    except:  # noqa: E722
+    except ValueError:
         return None
 
     parts = urlsplit(canon)
