@@ -30,14 +30,12 @@ def canonicalize(url: str, base: str | None = None) -> str | None:
 
     parts = urlsplit(canon)
 
-    scheme, host, port, netloc, path, query = (
-        parts.scheme.lower(),
-        parts.hostname,
-        parts.port,
-        parts.netloc,
-        parts.path,
-        parts.query,
-    )
+    scheme = parts.scheme.lower()
+    host = parts.hostname
+    port = parts.port
+    netloc = parts.netloc
+    path = parts.path
+    query = parts.query
 
     # drop non-HTTP urls
     if scheme not in ("http", "https"):
