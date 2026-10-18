@@ -1,75 +1,166 @@
-from urllib.parse import parse_qsl, urlencode, urljoin, urlsplit, urlunsplit
+import sys
+import time
+from argparse import ArgumentParser
+from pathlib import Path
 
-from w3lib.url import canonicalize_url
-
-TRACKING_PARAMS = [
-    "utm_source",
-    "utm_medium",
-    "utm_campaign",
-    "utm_term",
-    "utm_content",
-    "gclid",
-    "fbclid",
-]
-
-URL_SCHEME_DEFAULT_PORT = {"http": 80, "https": 443}
-
-ALLOWED_HOST = "kennesaw.edu"
+from canonicalize import canonicalize
+from crawl_config import (
+    DEFAULT_BUDGET,
+    DEFAULT_DELAY,
+    DEFAULT_MAX_BYTES,
+    DEFAULT_MAX_REDIRECT,
+    DEFAULT_TIMEOUT,
+    DEFAULT_USER_AGENT,
+    Config,
+)
 
 
-def canonicalize(url: str, base: str | None = None) -> str | None:
-    # join to base if base is provided
-    if base:
-        url = urljoin(base, url)
+def write_stats(_path, _stats): ...
 
-    # mechanical normalization
-    try:
-        canon = canonicalize_url(url, keep_fragments=False)
-    except:  # noqa: E722
-        return None
 
-    parts = urlsplit(canon)
+def crawl(_config, _pages_f, _log_f, _stats, _stats_path, _start_time): ...
 
-    scheme, host, port, netloc, path, query = (
-        parts.scheme.lower(),
-        parts.hostname,
-        parts.port,
-        parts.netloc,
-        parts.path,
-        parts.query,
+
+def parse_args() -> Config:
+    parser = ArgumentParser(description="")  # TODO: description
+
+    parser.add_argument(
+        "seeds",
+        nargs="+",
+        help="One or more seed URLs (within kennesaw.edu).",
     )
 
-    # drop non-HTTP urls
-    if scheme not in ("http", "https"):
-        return None
+    parser.add_argument(
+        "-b",
+        "--budget",
+        type=int,
+        default=DEFAULT_BUDGET,
+        help="max number of pages to fetch",
+    )
 
-    # drop hosts that are out of scope
-    if not host or not (host == ALLOWED_HOST or host.endswith(f".{ALLOWED_HOST}")):
-        return None
+    parser.add_argument(
+        "-d",
+        "--delay",
+        type=float,
+        default=DEFAULT_DELAY,
+        help="min seconds between requests to the same host",
+    )
 
-    # drop schema-default ports
-    if port == URL_SCHEME_DEFAULT_PORT[scheme]:
-        netloc = netloc.removesuffix(f":{port}")
+    parser.add_argument(
+        "-o",
+        "--output",
+        type=Path,
+        default=Path("artifacts"),
+        help="directory for pages.jsonl, crawl.log, stats.json",
+    )
 
-    # drop trailing slash (canonicalize_url handles the rest)
-    if path != "/":
-        path = path.rstrip("/")
+    parser.add_argument(
+        "-u",
+        "--user-agent",
+        default=DEFAULT_USER_AGENT,
+        help="User-Agent header for every request",
+    )
 
-    # drop tracking parameters
-    query = urlencode(
-        list(
-            filter(
-                lambda p: p[0].lower() not in TRACKING_PARAMS,
-                parse_qsl(query, keep_blank_values=True),
+    parser.add_argument(
+        "-t",
+        "--timeout",
+        type=float,
+        default=DEFAULT_TIMEOUT,
+        help="per-request timeout in seconds",
+    )
+
+    parser.add_argument(
+        "-c",
+        "--checkpoint",
+        type=Path,
+        default=None,
+        help="path to checkpoint file for resume support",
+    )
+
+    parser.add_argument(
+        "--max-bytes",
+        type=int,
+        default=DEFAULT_MAX_BYTES,
+        help="max response size (in bytes)",
+    )
+
+    parser.add_argument(
+        "--max-redirects",
+        type=int,
+        default=DEFAULT_MAX_REDIRECT,
+        help="max redirect hops per request",
+    )
+
+    parser.add_argument(
+        "--random-seed",
+        type=int,
+        default=None,
+        help="seed for random sampling",
+    )
+
+    args = parser.parse_args()
+
+    if args.budget < 1:
+        parser.error("--budget must be >= 1")
+
+    if args.delay < 0:
+        parser.error("--delay must be >= 0")
+
+    seeds = [
+        canonicalize(s) or parser.error(f"seed URL out of scope or invalid: {s}")
+        for s in args.seeds
+    ]
+
+    return Config(
+        seeds=seeds,
+        budget=args.budget,
+        delay=args.delay,
+        output_dir=args.output,
+        user_agent=args.user_agent,
+        max_bytes=args.max_bytes,
+        timeout=args.timeout,
+        checkpoint_path=args.checkpoint,
+        random_seed=args.random_seed,
+    )
+
+
+def main() -> int:
+    config = parse_args()
+
+    config.output_dir.mkdir(parents=True, exist_ok=True)
+
+    pages_path = config.output_dir / "pages.jsonl"
+    log_path = config.output_dir / "crawl.log"
+    stats_path = config.output_dir / "stats.json"
+
+    with (
+        open(pages_path, "a", buffering=1) as pages,
+        open(log_path, "a", buffering=1) as log,
+    ):
+        start_time = time.time()
+
+        stats = {
+            "pages_fetched": 0,
+            "urls_seen": 0,
+            "wall_clock_seconds": 0.0,
+            "robots_skip": 0,
+            "random_seed": config.random_seed,
+        }
+
+        try:
+            crawl(config, pages, log, stats, stats_path, start_time)
+        except KeyboardInterrupt:
+            print("\nInterrupted - flushing and writing stats.", file=sys.stderr)
+        finally:
+            stats["wall_clock_seconds"] = time.time() - start_time
+            write_stats(stats_path, stats)
+            print(
+                f"Done: {stats['pages_fetched']} pages in {stats['wall_clock_seconds']:1f}s",
+                file=sys.stderr,
             )
-        ),
-    )
 
-    return urlunsplit((scheme, netloc, path, query, ""))
-
-
-def main() -> None: ...
+    return 0
 
 
 if __name__ == "__main__":
-    main()
+    sys.exit(main())

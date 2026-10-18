@@ -8,3 +8,6 @@ wheels/
 
 # Virtual environments
 .venv
+
+# Crawl corpus output
+**/pages.jsonl
