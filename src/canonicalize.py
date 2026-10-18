@@ -19,6 +19,10 @@ URL_SCHEME_DEFAULT_PORT = {"http": 80, "https": 443}
 ALLOWED_HOST = "kennesaw.edu"
 
 
+def is_in_scope(url: str) -> bool:
+    return canonicalize(url) is not None
+
+
 def canonicalize(url: str, base: str | None = None) -> str | None:
     # join to base if base is provided
     if base:
