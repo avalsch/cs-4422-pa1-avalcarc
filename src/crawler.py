@@ -13,6 +13,7 @@ from crawl_config import (
     DEFAULT_USER_AGENT,
     Config,
 )
+from schema import Stats
 
 
 def write_stats(_path, _stats): ...
@@ -139,11 +140,11 @@ def main() -> int:
     ):
         start_time = time.time()
 
-        stats = {
+        stats: Stats = {
             "pages_fetched": 0,
             "urls_seen": 0,
             "wall_clock_seconds": 0.0,
-            "robots_skip": 0,
+            "robots_skips": 0,
             "random_seed": config.random_seed,
         }
 
