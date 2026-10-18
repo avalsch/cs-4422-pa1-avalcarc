@@ -8,6 +8,7 @@ authors = [
 ]
 requires-python = ">=3.14"
 dependencies = [
+    "requests>=2.34.2",
     "w3lib>=2.5.0",
 ]
 
