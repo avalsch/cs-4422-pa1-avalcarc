@@ -65,6 +65,7 @@ def test_stats_fields_match_spec():
         "wall_clock_seconds",
         "robots_skips",
         "random_seed",
+        "delay",
     }
 
 

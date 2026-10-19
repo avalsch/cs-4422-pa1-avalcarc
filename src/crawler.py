@@ -153,6 +153,7 @@ def main() -> int:
             "wall_clock_seconds": 0.0,
             "robots_skips": 0,
             "random_seed": config.random_seed,
+            "delay": config.delay,
         }
 
         try:

@@ -28,6 +28,7 @@ def make_stats() -> Stats:
         "wall_clock_seconds": 0.0,
         "robots_skips": 0,
         "random_seed": None,
+        "delay": 1.0,
     }
 
 
@@ -131,7 +132,8 @@ def test_write_stats_is_indented(tmp_path):
         '  "urls_seen": 0,\n'
         '  "wall_clock_seconds": 0.0,\n'
         '  "robots_skips": 0,\n'
-        '  "random_seed": null\n'
+        '  "random_seed": null,\n'
+        '  "delay": 1.0\n'
         "}\n"
     )
 

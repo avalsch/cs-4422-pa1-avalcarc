@@ -37,6 +37,7 @@ def make_stats() -> Stats:
         "wall_clock_seconds": 0.0,
         "robots_skips": 0,
         "random_seed": None,
+        "delay": 1.0,
     }
 
 

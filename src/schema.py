@@ -18,6 +18,7 @@ class Stats(TypedDict):
     wall_clock_seconds: float
     robots_skips: int
     random_seed: int | None
+    delay: float
 
 
 class PageRecord(TypedDict):
