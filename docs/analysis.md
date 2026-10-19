@@ -47,6 +47,24 @@ Written answers to Q1–Q8. The generated numbers behind them are in the appendi
 
 ## Q3: Error taxonomy
 
+Ranked by count:
+
+| rank | failure | count | what it is |
+| --- | --- | --- | --- |
+| 1 | `robots_unreachable` | 50 | robots.txt unreachable (10s timeout / 429 / 5xx) on 50 hosts, almost all registration/SSO infrastructure (`ban*`, `srs-*`, `degreeworks*`) |
+| 2 | `http_error (404)` | 7 | vanity subdomains with no root page (`police.`, `financialaid.`, `handbooks.`, `livesafe.`, `esports.`) |
+| 3 | `out_of_scope` | 7 | a redirect whose target is outside `kennesaw.edu` |
+| 4 | `http_error (403)` | 2 | `experience.kennesaw.edu/virtualtour`, `www.kennesaw.edu/ksu-online/about/` |
+| 5 | `wrong_content_type` | 1 | an MP3, not HTML |
+
+The entry not named in Req 13 is `out_of_scope`. Req 13 covers redirect loops and chains, but not a redirect that leaves the domain. Every one is a page behind authentication or an external SaaS:
+
+- `owllife.kennesaw.edu/events` -> `app.suitable.co/institution/10219/` (event platform)
+- `owlexpress.kennesaw.edu/`, `degreeworks.kennesaw.edu/` -> `login.microsoftonline.com/…/saml2` (Microsoft Entra SAML SSO)
+- `service.kennesaw.edu/` -> `kennesaw.service-now.com/sp?id=landing` (ServiceNow)
+
+`robots_unreachable` is arguably also outside Req 13's list (it is a `robots.txt` fetch failing, not a page fetch) and it is the single biggest failure: 50 of the 67.
+
 ## Q4: Top pages by in- and out-links
 
 ## Q5: Boilerplate removal
