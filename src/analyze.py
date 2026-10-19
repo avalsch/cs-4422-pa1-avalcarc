@@ -175,11 +175,17 @@ def q1_patterns(pages: list[dict[str, Any]], top: int = 15) -> str:
 
 
 def q2_duplicates(
-    pages: list[dict[str, Any]], threshold: float = DEFAULT_NEAR_DUP
+    pages: list[dict[str, Any]],
+    cache_dir: Path,
+    threshold: float = DEFAULT_NEAR_DUP,
 ) -> str:
     frame = pd.DataFrame(pages)
     urls = frame["url_canonical"].tolist()
     hashes = frame["content_hash"].to_numpy()
+
+    # near-duplicates run on the boilerplate-removed text, so shared chrome
+    # does not make unrelated pages look similar
+    texts = clean_texts(pages, cache_dir)
 
     groups = [
         group
@@ -188,9 +194,7 @@ def q2_duplicates(
     ]
     identical_pages = sum(len(group) for group in groups)
 
-    matrix = CountVectorizer(ngram_range=(5, 5), binary=True).fit_transform(
-        frame["text"]
-    )
+    matrix = CountVectorizer(ngram_range=(5, 5), binary=True).fit_transform(texts)
 
     # pairwise Jaccard = |A and B| / |A or B|, from the sparse shingle matrix
     intersection = np.asarray((matrix @ matrix.T).todense(), dtype=float)
@@ -618,7 +622,7 @@ def main(argv: list[str] | None = None) -> int:
             [
                 header(pages, log, stats),
                 q1_patterns(pages),
-                q2_duplicates(pages),
+                q2_duplicates(pages, config.cache_dir),
                 q3_errors(log),
                 q4_links(pages),
                 q5_boilerplate(pages, config.cache_dir),

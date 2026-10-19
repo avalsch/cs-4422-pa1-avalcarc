@@ -72,7 +72,7 @@ def test_q4_ranks_in_and_out_links():
     assert "http://k/off" not in text
 
 
-def test_q2_detects_identical_near_and_self_declared():
+def test_q2_detects_identical_near_and_self_declared(monkeypatch, tmp_path):
     pages = [
         {
             "url_canonical": "http://k/a",
@@ -100,7 +100,10 @@ def test_q2_detects_identical_near_and_self_declared():
         },
     ]
 
-    text = q2_duplicates(pages, threshold=0.5)
+    texts = [page["text"] for page in pages]
+    monkeypatch.setattr(analyze, "clean_texts", lambda _pages, _dir: texts)
+
+    text = q2_duplicates(pages, tmp_path, threshold=0.5)
 
     assert "byte-identical: 2 pages" in text
     assert "1 duplicate groups" in text
