@@ -25,8 +25,8 @@ from fetch import (
 )
 
 
-def fetch(url, config, session, permit=None) -> FetchSuccess | FetchError:
-    return _fetch(url, config, session, permit)
+def fetch(url, config, session, permit=None, wait=None) -> FetchSuccess | FetchError:
+    return _fetch(url, config, session, permit, wait)
 
 
 URL = "http://kennesaw.edu/"
@@ -191,6 +191,15 @@ def test_permit_callback_gates_hops():
     assert result.error == ERR_ROBOTS
     assert seen == ["http://kennesaw.edu/blocked"]
     assert session.calls == [URL]
+
+
+def test_wait_called_before_each_request_including_hops():
+    waits = []
+    session = FakeSession(redirect("/a"), redirect("/b"), html())
+    fetch(URL, config(), session, wait=waits.append)
+
+    assert waits == [URL, "http://kennesaw.edu/a", "http://kennesaw.edu/b"]
+    assert session.calls == waits
 
 
 def test_retries_once_on_503():

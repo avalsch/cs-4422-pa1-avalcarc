@@ -46,6 +46,7 @@ def fetch(
     config: Config,
     session: requests.Session | None = None,
     permit: Callable[[str], bool] | None = None,
+    wait: Callable[[str], None] | None = None,
 ) -> FetchSuccess | FetchError:
     session = session or requests.Session()
 
@@ -59,6 +60,9 @@ def fetch(
     retries = 0
 
     while True:
+        if wait is not None:
+            wait(current)
+
         response = _request(current, config, session)
 
         if isinstance(response, FetchError):
