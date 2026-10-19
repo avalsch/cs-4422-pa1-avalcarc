@@ -95,6 +95,15 @@ Boilerplate is removed with trafilatura, run over the cached HTML content. Chose
 
 ## Q6: Text statistics and Zipf
 
+- Q6.a. Before stopword removal the list is pure function words (`the`, `and`, `to`, `of`) and the only content word in the top ten is `ksu`. After removing stopwords it becomes a list that characterizes the subdomain: `ksu`, `students`, `kennesaw`, `resources`, `campus`, `student`, `university`, `state`, then `services`, `academic`, `information`, `research`, `faculty`, `program`, `college` -- the vocabulary of a university's public site (all 30 are in the appendix).
+
+  Two entries are artifacts, not content. `sign` is "sign in" navigation plus "sign a form" boilerplate trafilatura left behind ("Faculty, Staff and Students can sign in with their netID"). `000` is a tokenizer artifact: the default token pattern splits numbers at the comma, so "51,000+ Enrolled students" yields `51` and `000`, and every round thousand in the corpus contributes a `000`.
+
+- Q6.b. The stopword-removed distribution roughly follows Zipf but steeper than the ideal: a log-log fit gives exponent $s = 1.25$ with $R^2 = 0.96$ over 11,818 terms, 4,993 of which (42%) occur exactly once.
+
+  The departures are at both ends. At the head, function words and the institution's own name are more frequent than Zipf predicts: `ksu` and `kennesaw` appear constantly because every page is about the same university, the opposite of the diverse vocabulary Zipf assumes. At the tail, the hapax are overwhelmingly two kinds of noise: faculty surnames from the A–Z directory crawled (`abaza`, `abbott`, `abernathy`, `abdullah`, `abellan`, …) and numeric tokens (566 of the 4,993 contain digits: dates, phone numbers, dollar amounts, course codes), with the occasional typo (`aboput`). The tokenizer drives part of this: it lowercases, drops tokens under two characters, and splits on commas and punctuation.
+
+
 ## Q7: TF-IDF keywords
 
 ## Q8: Politeness evidence
