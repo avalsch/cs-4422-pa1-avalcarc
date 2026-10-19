@@ -22,6 +22,29 @@ Written answers to Q1–Q8. The generated numbers behind them are in the appendi
 
 ## Q2: Duplicate-content census
 
+- Q2.a. Of the 500 pages, 88 (17.6%) are byte-identical to another page (42 duplicate groups), 11 (2.2%) are near-duplicates, and 297 (59.4%) declare a canonical URL different from their own; the categories overlap.
+
+  The three are measured differently. "Byte-identical" is a shared `content_hash` (SHA-256 of the normalized text). "Near-duplicate" is 5-gram word-shingle Jaccard similarity over the boilerplate-removed text, at a threshold of 0.80. The threshold is measured, the non-identical pairs cluster at the top:
+
+  | Jaccard >= | Pairs |
+  | --- | --- |
+  | 0.90 | 17 |
+  | 0.80 | 19 |
+  | 0.70 | 21 |
+  | 0.50 | 22 |
+
+  so 0.80 sits in the gap between the real near-duplicates and the rest. Running the same measure on the raw text instead gave 609 pairs >=0.5 with only 1 >=0.8 -- almost all shared site chrome -- which is why we clean first.
+
+  "Self-declared" counts pages whose `<link rel="canonical">` differs from their own URL. 59.4% is high, but it's a site-wide convention rather than 297 genuinely redundant pages: nearly all point at an `index.php` form of the same directory URL.
+
+- Q2.b. One example per category:
+
+  - Byte-identical: `campus.kennesaw.edu/current-students/academics/writing-center/` and `.../writing-center/index.php`. The site serves the same page at the directory URL and at its `index.php`; both are distinct canonical URLs under the trailing-slash policy, so both are stored, and their content hashes match.
+
+  - Near-duplicate: `www.kennesaw.edu/degrees-programs/` and `www.kennesaw.edu/degrees-programs/certificates/index.php`, Jaccard 1.00. Same main content, different chrome, so not byte-identical; after boilerplate removal their shingle sets are identical.
+
+  - Self-declared: `www.kennesaw.edu/` declares `www.kennesaw.edu/index.php` as its canonical: the page itself tells us the directory URL is a duplicate of the `index.php` URL.
+
 ## Q3: Error taxonomy
 
 ## Q4: Top pages by in- and out-links
