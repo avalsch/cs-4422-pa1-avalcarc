@@ -276,19 +276,26 @@ Worst sampled page: https://campus.kennesaw.edu/policies-governance/staff-senate
 
 **Q8.b robots.txt.**
 
+Hosts with explicit rules (robots.txt reachable, host also served pages):
+
+| host | blocked | pages |
+| --- | --- | --- |
+| calendar.kennesaw.edu | 23 | 2 |
+| digitalcommons.kennesaw.edu | 3 | 1 |
+| catalog.kennesaw.edu | 2 | 3 |
+
+Hosts with no pages served (robots.txt unreachable, or a blanket disallow):
+
 | host | blocked |
 | --- | --- |
-| calendar.kennesaw.edu | 23 |
 | libguides.kennesaw.edu | 19 |
 | owlexpresstest.kennesaw.edu | 6 |
 | programfinder.kennesaw.edu | 5 |
 | bandir.kennesaw.edu | 4 |
 | banssb8preweb01.kennesaw.edu | 4 |
 | epay.kennesaw.edu | 3 |
-| digitalcommons.kennesaw.edu | 3 |
 | ksuconnect.kennesaw.edu | 2 |
 | mysportsrec.kennesaw.edu | 2 |
-| catalog.kennesaw.edu | 2 |
 | gss-patchban.kennesaw.edu | 2 |
 | banssb8btaweb01.kennesaw.edu | 2 |
 | ksutv.kennesaw.edu | 1 |
