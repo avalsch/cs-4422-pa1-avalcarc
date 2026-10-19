@@ -128,6 +128,31 @@ Filtering very short pages removes the thinnest of these: 20 of 500 pages are un
 
 ## Q8: Politeness evidence
 
+- Q8.a. Yes. Across the 64 hosts with more than one request, the minimum gap between consecutive requests to the same host is 1.00s and 0 hosts fell below the 1s floor (full table in the appendix). The floor is enforced per host, so low-traffic hosts show much larger minimums: `giving.kennesaw.edu` is 960s.
+
+- Q8.b. `robots.txt` stopped 122 URLs -- two different things did the stopping:
+
+  - 58 URLs on 10 hosts were blocked by explicit rules.
+  - 64 URLs on 50 hosts were blocked because their `robots.txt` was unreachable (timeout or 429/5xx) and policy on an unreachable robots.txt is to assume complete disallow. Those are almost all `ban*`/`srs-*`/`degreeworks*` registration hosts.
+
+  Two examples with the actual rule lines:
+
+  1. `https://libguides.kennesaw.edu/copyright/`: the host disallows everything:
+    ```
+    User-agent: *
+    Crawl-delay: 10
+        Disallow: /
+    ```
+
+  2. `https://programfinder.kennesaw.edu/s/search.html?collection=kennesaw-program-finder-meta&...`: the search path is disallowed:
+    ```
+    User-agent: *
+    Disallow: /search/
+    Disallow: /s/
+    ```
+
+- Q8.c. 500 pages in 1011.5s: 0.49 pages/s, or 0.90 HTTP requests/s (907 requests, counting `robots.txt` fetches and redirect hops).
+
 ---
 
 # Appendix: Generated output
