@@ -172,6 +172,43 @@ def test_redirect_aliases_stored_once(monkeypatch, tmp_path):
     ]
 
 
+def test_logs_skip_for_already_seen_link(monkeypatch, tmp_path):
+    fetcher = FakeFetcher(
+        {
+            SEED: "<a href='/a'>A</a><a href='/b'>B</a>",
+            PAGE_A: "<a href='/b'>B again</a>",
+            PAGE_B: "<p>b</p>",
+        }
+    )
+
+    _pages_f, log_f, stats = run(
+        monkeypatch, fetcher, tmp_path, config=make_config(budget=3)
+    )
+
+    skips = [
+        (e["url"], e["failure_reason"]) for e in events(log_f) if e["event"] == "skip"
+    ]
+    assert skips == [(PAGE_B, "already_seen")]
+    assert stats["pages_fetched"] == 3
+
+
+def test_logs_skip_for_duplicate_seed(monkeypatch, tmp_path):
+    fetcher = FakeFetcher({SEED: "<p>hi</p>"})
+
+    _pages_f, log_f, _stats = run(
+        monkeypatch,
+        fetcher,
+        tmp_path,
+        config=make_config(seeds=[SEED, SEED], budget=1),
+    )
+
+    skips = [
+        (e["url"], e["failure_reason"]) for e in events(log_f) if e["event"] == "skip"
+    ]
+    assert skips == [(SEED, "already_seen")]
+    assert fetcher.calls == [SEED]
+
+
 def test_logs_enqueue_fetch_and_error(monkeypatch, tmp_path):
     fetcher = FakeFetcher({}, errors={SEED: FetchError(ERR_TIMEOUT, url=SEED)})
 

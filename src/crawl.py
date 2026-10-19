@@ -54,6 +54,7 @@ def crawl(
 
     for seed in config.seeds:
         if seed in seen:
+            log_decision(log_f, EVENT_SKIP, seed, failure_reason="already_seen")
             continue
 
         mark_seen(seed)
@@ -92,6 +93,7 @@ def crawl(
 
         for link in parsed.out_links:
             if link in seen:
+                log_decision(log_f, EVENT_SKIP, link, failure_reason="already_seen")
                 continue
 
             mark_seen(link)
