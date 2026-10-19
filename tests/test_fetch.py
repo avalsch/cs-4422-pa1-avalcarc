@@ -148,8 +148,8 @@ def test_redirect_followed_and_canonicalized():
     result = fetch(URL, config(), session)
 
     assert isinstance(result, FetchSuccess)
-    assert result.final_url == "http://kennesaw.edu/b"
-    assert session.calls == [URL, "http://kennesaw.edu/b"]
+    assert result.final_url == "http://kennesaw.edu/b/"
+    assert session.calls == [URL, "http://kennesaw.edu/b/"]
 
 
 def test_redirect_loop_detected():

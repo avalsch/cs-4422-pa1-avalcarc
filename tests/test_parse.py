@@ -147,8 +147,13 @@ def test_internal_whitespace_removed_from_href():
 
 
 def test_duplicate_links_deduped_after_canonicalization():
-    html = "<a href='/a'>1</a><a href='/a/'>2</a><a href='/a#f'>3</a>"
+    html = "<a href='/a'>1</a><a href='/a#f'>2</a><a href='/a#g'>3</a>"
     assert links(html) == ["http://kennesaw.edu/a"]
+
+
+def test_trailing_slash_is_a_distinct_url():
+    html = "<a href='/a'>1</a><a href='/a/'>2</a>"
+    assert links(html) == ["http://kennesaw.edu/a", "http://kennesaw.edu/a/"]
 
 
 def test_fragment_only_links_skipped():

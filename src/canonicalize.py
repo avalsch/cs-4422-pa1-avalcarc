@@ -55,10 +55,6 @@ def canonicalize(url: str, base: str | None = None) -> str | None:
     if port == URL_SCHEME_DEFAULT_PORT[scheme]:
         netloc = netloc.removesuffix(f":{port}")
 
-    # drop trailing slash (canonicalize_url handles the rest)
-    if path != "/":
-        path = path.rstrip("/")
-
     # drop tracking parameters
     query = urlencode(
         [

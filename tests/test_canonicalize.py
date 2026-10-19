@@ -67,8 +67,9 @@ def test_resolves_dot_segments():
     assert canonicalize("http://kennesaw.edu/a/../b/./c") == "http://kennesaw.edu/b/c"
 
 
-def test_trailing_slash_stripped():
-    assert canonicalize("http://kennesaw.edu/about/") == "http://kennesaw.edu/about"
+def test_trailing_slash_preserved():
+    assert canonicalize("http://kennesaw.edu/about/") == "http://kennesaw.edu/about/"
+    assert canonicalize("http://kennesaw.edu/about") == "http://kennesaw.edu/about"
 
 
 def test_root_path_kept():

@@ -13,6 +13,7 @@ from schema import Stats
 
 SEED = "http://kennesaw.edu/"
 PAGE_A = "http://kennesaw.edu/a"
+PAGE_A_SLASH = "http://kennesaw.edu/a/"
 PAGE_B = "http://kennesaw.edu/b"
 
 
@@ -155,13 +156,33 @@ def test_stops_at_budget(monkeypatch, tmp_path):
 
 
 def test_dedupes_links_before_fetching(monkeypatch, tmp_path):
-    html = "<a href='/a'>1</a><a href='/a/'>2</a><a href='/a#f'>3</a>"
+    html = "<a href='/a'>1</a><a href='/a#f'>2</a><a href='/a#g'>3</a>"
     fetcher = FakeFetcher({SEED: html, PAGE_A: "<p>a</p>"})
 
     _pages_f, _log_f, stats = run(monkeypatch, fetcher, tmp_path)
 
     assert fetcher.calls == [SEED, PAGE_A]
     assert stats["urls_seen"] == 2
+
+
+def test_trailing_slash_is_not_collapsed(monkeypatch, tmp_path):
+    fetcher = FakeFetcher(
+        {
+            SEED: "<a href='/a'>1</a><a href='/a/'>2</a>",
+            PAGE_A: "<p>a</p>",
+            PAGE_A_SLASH: "<p>a slash</p>",
+        }
+    )
+
+    pages_f, _log_f, stats = run(monkeypatch, fetcher, tmp_path)
+
+    assert fetcher.calls == [SEED, PAGE_A, PAGE_A_SLASH]
+    assert [r["url_canonical"] for r in records(pages_f)] == [
+        SEED,
+        PAGE_A,
+        PAGE_A_SLASH,
+    ]
+    assert stats["urls_seen"] == 3
 
 
 def test_redirect_target_is_not_enqueued_again(monkeypatch, tmp_path):
