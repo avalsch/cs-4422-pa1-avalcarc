@@ -1,4 +1,11 @@
-from analyze import fetch_gaps, q1_patterns, q3_errors, q8_politeness, shape
+from analyze import (
+    fetch_gaps,
+    q1_patterns,
+    q3_errors,
+    q4_links,
+    q8_politeness,
+    shape,
+)
 
 
 def test_shape_replaces_number_date_and_id_segments():
@@ -27,6 +34,23 @@ def test_q1_ranks_patterns_by_pages_and_counts_hashes():
     assert "4 pages across 2 patterns" in text
     assert "| 1 | `kennesaw.edu/cal/<num>` | 3 | 2 |" in text
     assert "| 2 | `kennesaw.edu/about` | 1 | 1 |" in text
+
+
+def test_q4_ranks_in_and_out_links():
+    pages = [
+        {"url_canonical": "http://k/s", "out_links": ["http://k/a", "http://k/b"]},
+        {"url_canonical": "http://k/a", "out_links": ["http://k/b"]},
+        {"url_canonical": "http://k/b", "out_links": []},
+        {"url_canonical": "http://k/c", "out_links": ["http://k/b", "http://k/off"]},
+    ]
+
+    text = q4_links(pages)
+
+    assert "| 1 | http://k/b | 3 |" in text
+    assert "| 2 | http://k/a | 1 |" in text
+    assert "| 1 | http://k/c | 2 |" in text
+    assert "| 2 | http://k/s | 2 |" in text
+    assert "http://k/off" not in text
 
 
 def test_q3_ranks_by_count_then_name():

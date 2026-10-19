@@ -159,6 +159,53 @@ def q3_errors(log: list[dict[str, Any]]) -> str:
     )
 
 
+def q4_links(pages: list[dict[str, Any]], top: int = 5) -> str:
+    frame = pd.DataFrame(pages)
+    crawled = set(frame["url_canonical"])
+
+    edges = frame[["url_canonical", "out_links"]].explode("out_links")
+    edges = edges[edges["out_links"].isin(crawled)]
+
+    indegree = (
+        edges.groupby("out_links")
+        .size()
+        .reset_index(name="count")
+        .sort_values(["count", "out_links"], ascending=[False, True])
+    )
+    outdegree = (
+        frame.assign(count=frame["out_links"].map(len))
+        .loc[:, ["url_canonical", "count"]]
+        .sort_values(["count", "url_canonical"], ascending=[False, True])
+    )
+
+    in_rows = [
+        f"| {i} | {r.out_links} | {r.count} |"
+        for i, r in enumerate(indegree.head(top).itertuples(index=False), 1)
+    ]
+    out_rows = [
+        f"| {i} | {r.url_canonical} | {r.count} |"
+        for i, r in enumerate(outdegree.head(top).itertuples(index=False), 1)
+    ]
+
+    return "\n".join(
+        [
+            "## Q4: top pages by links",
+            "",
+            "Top 5 by incoming links (from crawled pages):",
+            "",
+            "| rank | url | in-links |",
+            "| --- | --- | --- |",
+            *in_rows,
+            "",
+            "Top 5 by outgoing links:",
+            "",
+            "| rank | url | out-links |",
+            "| --- | --- | --- |",
+            *out_rows,
+        ]
+    )
+
+
 def fetch_gaps(log: list[dict[str, Any]]) -> dict[str, float]:
     stamps: dict[str, list[datetime]] = defaultdict(list)
 
@@ -233,6 +280,7 @@ def main(argv: list[str] | None = None) -> int:
                 header(pages, log, stats),
                 q1_patterns(pages),
                 q3_errors(log),
+                q4_links(pages),
                 q8_politeness(log, stats),
             ]
         )
