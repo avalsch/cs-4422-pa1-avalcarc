@@ -77,6 +77,22 @@ The leaders are index pages: `facultyweb.kennesaw.edu/` (1380, a faculty directo
 
 ## Q5: Boilerplate removal
 
+Boilerplate is removed with trafilatura, run over the cached HTML content. Chosen because a shared-shingle approach across pages needs a frequency threshold tuned by hand and still leaves per-page chrome; tag-based extraction (`<main>`/`<article>`) is fragile because not every page uses those elements; and DOM-density heuristics are more code for the same idea. This is why the crawler caches raw HTML.
+
+- Q5.a. Mean words per page fall from 1089.8 to 398.5 -- 63.4% of the text is boilerplate. The top-5 longest change almost completely:
+  
+  | | before (raw) | after (cleaned) |
+  | --- | --- | --- |
+  | 1 | `…/visit/campus-tours/` 18879 | `facultyweb.kennesaw.edu/` 4065 |
+  | 2 | `…/visit/campus-tours/index.php` 18879 | `…/supplier-vendor-involvement.php` 3653 |
+  | 3 | `…/event-venue-management/` 17822 | `…/public-forum.php` 2918 |
+  | 4 | `…/academic-calendars.php` 6459 | `…/visit/campus-tours/` 2076 |
+  | 5 | `…/public-forum.php` 4495 | `…/visit/campus-tours/index.php` 2076 |
+
+  What changed it is how much chrome each page carried. `campus-tours/` loses 89% of its text (18879 → 2076), and `event-venue-management/` drops out of the top five entirely; both are template-heavy pages whose raw count was mostly navigation and footer. `facultyweb.kennesaw.edu/` is the opposite: absent from the raw top five, it becomes the longest page after cleaning (4065) because it is an A–Z faculty directory with almost no chrome to remove. Only `public-forum.php` appears on both lists.
+
+  Inspecting two pages by hand shows the aggregate is sound but per-page results are imperfect: `facultyweb/` and `azindex.kennesaw.edu/` are the only 2 of 500 pages whose cleaned count rises (by 1039 and 306 words -- trafilatura reflows their huge link lists), and the cleaned `campus-tours/` still opens with navigation labels.
+
 ## Q6: Text statistics and Zipf
 
 ## Q7: TF-IDF keywords
