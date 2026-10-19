@@ -1,3 +1,5 @@
+from sklearn.feature_extraction.text import TfidfVectorizer
+
 import analyze
 from analyze import (
     _cleaned_words,
@@ -15,7 +17,6 @@ from analyze import (
     shape,
     zipf_fit,
 )
-from sklearn.feature_extraction.text import TfidfVectorizer
 from storage import write_cached_html
 
 
@@ -179,7 +180,7 @@ def test_keywords_returns_top_scoring_terms():
 
     result = _keywords(texts, [0], TfidfVectorizer())
 
-    assert [word for word, _ in result[0]][0] == "alpha"
+    assert next(word for word, _ in result[0]) == "alpha"
 
 
 def test_q7_is_deterministic_per_seed(monkeypatch, tmp_path):

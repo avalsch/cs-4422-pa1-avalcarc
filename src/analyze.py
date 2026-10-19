@@ -1,3 +1,4 @@
+import itertools
 import json
 import random
 import re
@@ -152,8 +153,10 @@ def q1_patterns(pages: list[dict[str, Any]], top: int = 15) -> str:
         [
             "## Q1: URL patterns by budget",
             "",
-            f"{len(frame)} pages across {len(grouped)} patterns; top {min(top, len(grouped))}"
-            " by pages:",
+            (
+                f"{len(frame)} pages across {len(grouped)} patterns; "
+                f"top {min(top, len(grouped))} by pages:"
+            ),
             "",
             "| rank | pattern | pages | distinct hashes |",
             "| --- | --- | --- | --- |",
@@ -446,8 +449,10 @@ def q6_words(pages: list[dict[str, Any]], cache_dir: Path, top: int = 30) -> str
             "| --- | --- | --- |",
             *rows(content_terms),
             "",
-            f"Zipf fit on the stopword-removed distribution: exponent s = {exponent:.2f}, "
-            f"R^2 = {r2:.2f}, {len(content_terms)} terms, {hapax} occurring once.",
+            (
+                f"Zipf fit on the stopword-removed distribution: exponent s = {exponent:.2f}, "
+                f"R^2 = {r2:.2f}, {len(content_terms)} terms, {hapax} occurring once."
+            ),
         ]
     )
 
@@ -529,7 +534,9 @@ def fetch_gaps(log: list[dict[str, Any]]) -> dict[str, float]:
         times.sort()
 
         if len(times) > 1:
-            gaps[host] = min((b - a).total_seconds() for a, b in zip(times, times[1:]))
+            gaps[host] = min(
+                (b - a).total_seconds() for a, b in itertools.pairwise(times)
+            )
 
     return gaps
 
@@ -554,8 +561,10 @@ def q8_politeness(log: list[dict[str, Any]], stats: dict[str, Any]) -> str:
         [
             "## Q8: politeness evidence",
             "",
-            f"**Q8.a delay compliance.** {len(gaps)} hosts, minimum gap {min_gap:.2f} s, "
-            f"{below} below the {delay:.2f} s floor.",
+            (
+                f"**Q8.a delay compliance.** {len(gaps)} hosts, minimum gap {min_gap:.2f} s, "
+                f"{below} below the {delay:.2f} s floor."
+            ),
             "",
             "| host | min gap (s) |",
             "| --- | --- |",
@@ -570,8 +579,10 @@ def q8_politeness(log: list[dict[str, Any]], stats: dict[str, Any]) -> str:
             "| --- | --- |",
             *[f"| {h} | {c} |" for h, c in blocked.most_common()],
             "",
-            f"**Q8.c request rate.** {pages} pages / {wall:.1f} s = {pages / wall:.2f} pages/s; "
-            f"{requests} requests / {wall:.1f} s = {requests / wall:.2f} requests/s.",
+            (
+                f"**Q8.c request rate.** {pages} pages / {wall:.1f} s = {pages / wall:.2f} pages/s; "
+                f"{requests} requests / {wall:.1f} s = {requests / wall:.2f} requests/s."
+            ),
         ]
     )
 
