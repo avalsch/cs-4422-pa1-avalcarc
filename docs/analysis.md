@@ -32,21 +32,21 @@ Grouped by host + first 2 path segments; 500 pages across 185 patterns, top 15 b
 Near-duplicate threshold: 0.80 (5-gram word shingles, Jaccard).
 
 - byte-identical: 90 pages (18.0%), 43 duplicate groups
-- near-duplicate: 2 pages (0.4%), 1 pairs at Jaccard >= 0.80
+- near-duplicate: 11 pages (2.2%), 19 pairs at Jaccard >= 0.80
 - self-declared canonical: 297 pages (59.4%)
 
 Non-identical pairs by similarity band:
 
 | Jaccard >= | pairs |
 | --- | --- |
-| 0.90 | 0 |
-| 0.80 | 1 |
-| 0.70 | 13 |
-| 0.50 | 609 |
+| 0.90 | 17 |
+| 0.80 | 19 |
+| 0.70 | 21 |
+| 0.50 | 22 |
 
 Examples:
 - identical: https://campus.kennesaw.edu/current-students/academics/writing-center/ == https://campus.kennesaw.edu/current-students/academics/writing-center/index.php
-- near: https://www.kennesaw.edu/degrees-programs/ ~ https://www.kennesaw.edu/degrees-programs/endorsements/index.php (Jaccard 0.83)
+- near: https://www.kennesaw.edu/degrees-programs/ ~ https://www.kennesaw.edu/degrees-programs/certificates/index.php (Jaccard 1.00)
 - self-declared: https://www.kennesaw.edu/ -> https://www.kennesaw.edu/index.php
 
 ## Q3: most common fetch failures
