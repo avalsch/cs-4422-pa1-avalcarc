@@ -10,8 +10,10 @@ from storage import (
     EVENT_ENQUEUE,
     EVENT_ERROR,
     EVENT_FETCH,
+    cache_path,
     log_decision,
     utc_now,
+    write_cached_html,
     write_page,
     write_stats,
 )
@@ -160,3 +162,22 @@ def test_write_stats_keeps_the_old_file_when_the_write_fails(tmp_path, monkeypat
         write_stats(path, make_stats())
 
     assert json.loads(path.read_text()) == previous
+
+
+def test_cache_path_is_deterministic_and_url_specific(tmp_path):
+    assert cache_path(tmp_path, "http://kennesaw.edu/a") == cache_path(
+        tmp_path, "http://kennesaw.edu/a"
+    )
+    assert cache_path(tmp_path, "http://kennesaw.edu/a") != cache_path(
+        tmp_path, "http://kennesaw.edu/b"
+    )
+    assert cache_path(tmp_path, "http://kennesaw.edu/a").suffix == ".html"
+
+
+def test_write_cached_html_creates_dir_and_writes(tmp_path):
+    cache_dir = tmp_path / "cache"
+
+    written = write_cached_html(cache_dir, "http://kennesaw.edu/a", "<p>a</p>")
+
+    assert written == cache_path(cache_dir, "http://kennesaw.edu/a")
+    assert written.read_text() == "<p>a</p>"

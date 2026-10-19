@@ -15,6 +15,7 @@ class Config:
     budget: int
     delay: float
     output_dir: Path
+    cache_dir: Path | None = None
     user_agent: str = DEFAULT_USER_AGENT
     max_bytes: int = DEFAULT_MAX_BYTES
     max_redirects: int = DEFAULT_MAX_REDIRECT

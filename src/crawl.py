@@ -21,6 +21,7 @@ from storage import (
     EVENT_SKIP,
     log_decision,
     utc_now,
+    write_cached_html,
     write_page,
     write_stats,
 )
@@ -121,6 +122,9 @@ def crawl(
         write_page(pages_f, record)
         stored.add(result.final_url)
         stats["pages_fetched"] += 1
+
+        if config.cache_dir is not None:
+            write_cached_html(config.cache_dir, result.final_url, result.html)
 
         mark_seen(result.final_url)
 

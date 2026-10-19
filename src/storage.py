@@ -1,3 +1,4 @@
+import hashlib
 import json
 from collections.abc import Mapping
 from datetime import UTC, datetime
@@ -50,3 +51,17 @@ def write_stats(path: Path, stats: Stats) -> None:
     tmp = path.with_name(path.name + ".tmp")
     tmp.write_text(json.dumps(stats, indent=2) + "\n", encoding="utf-8")
     tmp.replace(path)
+
+
+def cache_path(cache_dir: Path, url: str) -> Path:
+    # URL -> filename is deterministic so the analysis stage can find a page's
+    # raw HTML from its canonical URL without an index.
+    digest = hashlib.sha256(url.encode("utf-8")).hexdigest()
+    return cache_dir / f"{digest}.html"
+
+
+def write_cached_html(cache_dir: Path, url: str, html: str) -> Path:
+    path = cache_path(cache_dir, url)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(html, encoding="utf-8")
+    return path

@@ -10,6 +10,7 @@ import crawl
 from crawl_config import Config
 from fetch import ERR_HTTP, ERR_ROBOTS, ERR_TIMEOUT, FetchError, FetchSuccess
 from schema import Stats
+from storage import cache_path
 
 SEED = "http://kennesaw.edu/"
 PAGE_A = "http://kennesaw.edu/a"
@@ -438,3 +439,20 @@ def test_robots_blocks_redirect_hop(monkeypatch, tmp_path):
         ("fetch", SEED, None),
         ("skip", target, "robots_blocked"),
     ]
+
+
+def test_caches_raw_html_when_cache_dir_is_set(monkeypatch, tmp_path):
+    cache_dir = tmp_path / "cache"
+    fetcher = FakeFetcher({SEED: "<p>hi</p>"})
+
+    run(monkeypatch, fetcher, tmp_path, config=make_config(cache_dir=cache_dir))
+
+    assert cache_path(cache_dir, SEED).read_text() == "<p>hi</p>"
+
+
+def test_does_not_cache_when_cache_dir_is_none(monkeypatch, tmp_path):
+    fetcher = FakeFetcher({SEED: "<p>hi</p>"})
+
+    run(monkeypatch, fetcher, tmp_path)
+
+    assert not (tmp_path / "cache").exists()

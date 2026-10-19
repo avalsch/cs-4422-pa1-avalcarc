@@ -11,3 +11,4 @@ wheels/
 
 # Crawl corpus output
 **/pages.jsonl
+cache/

@@ -57,6 +57,13 @@ def parse_args() -> Config:
     )
 
     parser.add_argument(
+        "--cache-dir",
+        type=Path,
+        default=Path("cache"),
+        help="directory for raw HTML cache (gitignored)",
+    )
+
+    parser.add_argument(
         "-u",
         "--user-agent",
         default=DEFAULT_USER_AGENT,
@@ -110,6 +117,7 @@ def parse_args() -> Config:
         budget=args.budget,
         delay=args.delay,
         output_dir=args.output,
+        cache_dir=args.cache_dir,
         user_agent=args.user_agent,
         max_bytes=args.max_bytes,
         timeout=args.timeout,
@@ -124,6 +132,9 @@ def main() -> int:
     config = parse_args()
 
     config.output_dir.mkdir(parents=True, exist_ok=True)
+
+    if config.cache_dir is not None:
+        config.cache_dir.mkdir(parents=True, exist_ok=True)
 
     pages_path = config.output_dir / "pages.jsonl"
     log_path = config.output_dir / "crawl.log"
