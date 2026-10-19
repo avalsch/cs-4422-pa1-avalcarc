@@ -259,8 +259,15 @@ def q2_duplicates(
     return "\n".join(lines)
 
 
+def _error_label(entry: dict[str, Any]) -> str:
+    reason = entry["failure_reason"]
+    status = entry.get("status")
+
+    return f"{reason} ({status})" if reason == "http_error" and status else reason
+
+
 def q3_errors(log: list[dict[str, Any]]) -> str:
-    counts = Counter(e["failure_reason"] for e in log if e["event"] == "error")
+    counts = Counter(_error_label(e) for e in log if e["event"] == "error")
     ranked = sorted(counts.items(), key=lambda kv: (-kv[1], kv[0]))[:5]
 
     rows = [

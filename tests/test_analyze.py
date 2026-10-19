@@ -213,6 +213,21 @@ def test_q7_is_deterministic_per_seed(monkeypatch, tmp_path):
     assert "after stop_words + min_df=2 + sublinear_tf:" in first
 
 
+def test_q3_splits_http_errors_by_status():
+    log = [
+        {"event": "error", "failure_reason": "http_error", "status": 404},
+        {"event": "error", "failure_reason": "http_error", "status": 404},
+        {"event": "error", "failure_reason": "http_error", "status": 403},
+        {"event": "error", "failure_reason": "timeout", "status": None},
+    ]
+
+    text = q3_errors(log)
+
+    assert "| 1 | http_error (404) | 2 |" in text
+    assert "| 2 | http_error (403) | 1 |" in text
+    assert "| 3 | timeout | 1 |" in text
+
+
 def test_q3_ranks_by_count_then_name():
     log = [
         {"event": "error", "failure_reason": "timeout"},
