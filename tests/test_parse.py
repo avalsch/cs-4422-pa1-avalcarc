@@ -350,6 +350,12 @@ def test_malformed_html_still_parses():
     assert result.out_links == ["http://kennesaw.edu/x"]
 
 
+def test_deeply_nested_markup_does_not_exhaust_the_stack():
+    depth = 5000
+    html = "<div>" * depth + "deep" + "</div>" * depth
+    assert text(html) == "deep"
+
+
 def test_malformed_link_dropped_but_later_links_kept():
     html = "<a href='http://[::1/x'>bad</a><a href='/ok'>ok</a>"
     assert links(html) == ["http://kennesaw.edu/ok"]

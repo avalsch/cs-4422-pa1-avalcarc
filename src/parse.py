@@ -1,9 +1,10 @@
 import re
+from collections.abc import Iterator
 from dataclasses import dataclass
 from urllib.parse import urljoin
 
 from bs4 import BeautifulSoup, NavigableString, Tag
-from bs4.element import PreformattedString
+from bs4.element import PageElement, PreformattedString
 
 from canonicalize import canonicalize, is_in_scope
 
@@ -88,23 +89,37 @@ def _effective_base(soup: BeautifulSoup, base_url: str) -> str:
 
 def _text(soup: BeautifulSoup) -> str:
     parts: list[str] = []
+    root = soup.body or soup
 
-    def walk(node: Tag) -> None:
-        for child in node.children:
-            if isinstance(child, Tag):
-                if child.name in _SKIP_TEXT_TAGS:
-                    continue
+    stack: list[tuple[Iterator[PageElement], bool]] = [(iter(root.children), False)]
 
-                block = child.name in _BLOCK_TAGS
-                parts.append(" " if block else "")
-                walk(child)
-                parts.append(" " if block else "")
-            elif isinstance(child, NavigableString) and not isinstance(
-                child, PreformattedString
-            ):
-                parts.append(str(child))
+    while stack:
+        children, block = stack[-1]
+        child = next(children, None)
 
-    walk(soup.body or soup)
+        if child is None:
+            stack.pop()
+
+            if block:
+                parts.append(" ")
+
+            continue
+
+        if isinstance(child, Tag):
+            if child.name in _SKIP_TEXT_TAGS:
+                continue
+
+            block = child.name in _BLOCK_TAGS
+
+            if block:
+                parts.append(" ")
+
+            stack.append((iter(child.children), block))
+        elif isinstance(child, NavigableString) and not isinstance(
+            child, PreformattedString
+        ):
+            parts.append(str(child))
+
     return _WHITESPACE.sub(" ", "".join(parts)).strip()
 
 
