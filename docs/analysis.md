@@ -7,25 +7,25 @@
 
 ## Q1: URL patterns by budget
 
-500 pages across 499 patterns; top 15 by pages:
+Grouped by host + first 2 path segments; 500 pages across 185 patterns, top 15 by pages:
 
 | rank | pattern | pages | distinct hashes |
 | --- | --- | --- | --- |
-| 1 | `ksumail.kennesaw.edu/` | 2 | 1 |
-| 2 | `artspurchase.kennesaw.edu/Events` | 1 | 1 |
-| 3 | `azindex.kennesaw.edu/` | 1 | 1 |
-| 4 | `bookstore.kennesaw.edu/` | 1 | 1 |
-| 5 | `calendar.kennesaw.edu/` | 1 | 1 |
-| 6 | `calendar.kennesaw.edu/department/human_resources/` | 1 | 1 |
-| 7 | `campus.kennesaw.edu/` | 1 | 1 |
-| 8 | `campus.kennesaw.edu/campus-resources/campus-moves.php` | 1 | 1 |
-| 9 | `campus.kennesaw.edu/colleges-departments/` | 1 | 1 |
-| 10 | `campus.kennesaw.edu/colleges-departments/arts/` | 1 | 1 |
-| 11 | `campus.kennesaw.edu/colleges-departments/arts/academics/dance/` | 1 | 1 |
-| 12 | `campus.kennesaw.edu/colleges-departments/arts/academics/music/index.php` | 1 | 1 |
-| 13 | `campus.kennesaw.edu/colleges-departments/arts/academics/theatre/` | 1 | 1 |
-| 14 | `campus.kennesaw.edu/colleges-departments/arts/academics/visual-arts/` | 1 | 1 |
-| 15 | `campus.kennesaw.edu/colleges-departments/arts/academics/visual-arts/zuckerman/` | 1 | 1 |
+| 1 | `campus.kennesaw.edu/colleges-departments/ccse` | 55 | 49 |
+| 2 | `campus.kennesaw.edu/current-students/student-affairs` | 47 | 39 |
+| 3 | `campus.kennesaw.edu/colleges-departments/coles` | 23 | 23 |
+| 4 | `campus.kennesaw.edu/colleges-departments/radow` | 18 | 18 |
+| 5 | `campus.kennesaw.edu/faculty-staff/academic-affairs` | 17 | 16 |
+| 6 | `campus.kennesaw.edu/current-students/academics` | 15 | 14 |
+| 7 | `campus.kennesaw.edu/offices-services/fiscal-services` | 13 | 12 |
+| 8 | `campus.kennesaw.edu/offices-services/research` | 13 | 13 |
+| 9 | `campus.kennesaw.edu/colleges-departments/bagwell` | 12 | 12 |
+| 10 | `www.kennesaw.edu/news/stories` | 10 | 10 |
+| 11 | `campus.kennesaw.edu/colleges-departments/spceet` | 9 | 9 |
+| 12 | `campus.kennesaw.edu/faculty-staff/human-resources` | 9 | 9 |
+| 13 | `campus.kennesaw.edu/colleges-departments/arts` | 8 | 8 |
+| 14 | `campus.kennesaw.edu/colleges-departments/wellstar` | 8 | 8 |
+| 15 | `campus.kennesaw.edu/offices-services/campus-operations` | 7 | 5 |
 
 ## Q2: duplicate content
 
