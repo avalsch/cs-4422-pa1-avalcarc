@@ -1,4 +1,5 @@
 import json
+import random
 import re
 import sys
 from argparse import ArgumentParser
@@ -12,7 +13,7 @@ from urllib.parse import parse_qsl, urlsplit
 import numpy as np
 import pandas as pd
 import trafilatura
-from sklearn.feature_extraction.text import CountVectorizer
+from sklearn.feature_extraction.text import CountVectorizer, TfidfVectorizer
 
 from storage import cache_path
 
@@ -23,6 +24,7 @@ DEFAULT_CACHE = Path("cache")
 
 DEFAULT_NEAR_DUP = 0.8
 NEAR_DUP_BANDS = (0.9, 0.8, 0.7, 0.5)
+MIN_WORDS = 50
 
 
 @dataclass
@@ -421,7 +423,10 @@ def q6_words(pages: list[dict[str, Any]], cache_dir: Path, top: int = 30) -> str
     hapax = sum(1 for _, count in content_terms if count == 1)
 
     def rows(terms: list[tuple[str, int]]) -> list[str]:
-        return [f"| {i} | {word} | {count} |" for i, (word, count) in enumerate(terms[:top], 1)]
+        return [
+            f"| {i} | {word} | {count} |"
+            for i, (word, count) in enumerate(terms[:top], 1)
+        ]
 
     return "\n".join(
         [
@@ -443,6 +448,69 @@ def q6_words(pages: list[dict[str, Any]], cache_dir: Path, top: int = 30) -> str
             "",
             f"Zipf fit on the stopword-removed distribution: exponent s = {exponent:.2f}, "
             f"R^2 = {r2:.2f}, {len(content_terms)} terms, {hapax} occurring once.",
+        ]
+    )
+
+
+def _keywords(
+    texts: list[str], picks: list[int], vectorizer: TfidfVectorizer
+) -> dict[int, list[tuple[str, float]]]:
+    matrix = vectorizer.fit_transform(texts)
+    names = vectorizer.get_feature_names_out()
+    result: dict[int, list[tuple[str, float]]] = {}
+
+    for index in picks:
+        row = matrix[index].toarray().ravel()
+        top = np.argsort(-row, kind="stable")[:5]
+        result[index] = [(str(names[j]), float(row[j])) for j in top if row[j] > 0]
+
+    return result
+
+
+def q7_tfidf(
+    pages: list[dict[str, Any]],
+    cache_dir: Path,
+    stats: dict[str, Any],
+    sample: int = 5,
+) -> str:
+    texts = clean_texts(pages, cache_dir)
+    urls = [p["url_canonical"] for p in pages]
+    lengths = [len(text.split()) for text in texts]
+
+    rng = random.Random(stats["random_seed"])
+    picks = sorted(rng.sample(range(len(texts)), min(sample, len(texts))))
+
+    before = _keywords(texts, picks, TfidfVectorizer())
+    worst = min(picks, key=lambda index: lengths[index])
+    after = _keywords(texts, [worst], TfidfVectorizer(min_df=2, sublinear_tf=True))[
+        worst
+    ]
+
+    thin = sum(1 for length in lengths if length < MIN_WORDS)
+
+    def keywords(terms: list[tuple[str, float]]) -> str:
+        return ", ".join(f"{word} ({score:.2f})" for word, score in terms) or "(none)"
+
+    rows = [
+        f"| {i} | {lengths[index]} | {urls[index]} | {keywords(before[index])} |"
+        for i, index in enumerate(picks, 1)
+    ]
+
+    return "\n".join(
+        [
+            "## Q7: TF-IDF keywords",
+            "",
+            f"Sampled {len(picks)} pages with random_seed = {stats['random_seed']}.",
+            "",
+            "| # | words | url | top 5 keywords |",
+            "| --- | --- | --- | --- |",
+            *rows,
+            "",
+            f"Worst sampled page: {urls[worst]} ({lengths[worst]} words).",
+            f"- before: {keywords(before[worst])}",
+            f"- after min_df=2 + sublinear_tf: {keywords(after)}",
+            "",
+            f"{thin} of {len(texts)} pages are shorter than {MIN_WORDS} words.",
         ]
     )
 
@@ -525,6 +593,7 @@ def main(argv: list[str] | None = None) -> int:
                 q4_links(pages),
                 q5_boilerplate(pages, config.cache_dir),
                 q6_words(pages, config.cache_dir),
+                q7_tfidf(pages, config.cache_dir, stats),
                 q8_politeness(log, stats),
             ]
         )

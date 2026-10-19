@@ -1,6 +1,7 @@
 import analyze
 from analyze import (
     _cleaned_words,
+    _keywords,
     _term_counts,
     fetch_gaps,
     q1_patterns,
@@ -9,10 +10,12 @@ from analyze import (
     q4_links,
     q5_boilerplate,
     q6_words,
+    q7_tfidf,
     q8_politeness,
     shape,
     zipf_fit,
 )
+from sklearn.feature_extraction.text import TfidfVectorizer
 from storage import write_cached_html
 
 
@@ -169,6 +172,29 @@ def test_q6_reports_top_words_and_fit(monkeypatch, tmp_path):
     assert "1 boilerplate-removed pages, 4 tokens" in text
     assert "| 1 | alpha | 2 |" in text
     assert "exponent s = " in text
+
+
+def test_keywords_returns_top_scoring_terms():
+    texts = ["alpha alpha beta", "alpha gamma"]
+
+    result = _keywords(texts, [0], TfidfVectorizer())
+
+    assert [word for word, _ in result[0]][0] == "alpha"
+
+
+def test_q7_is_deterministic_per_seed(monkeypatch, tmp_path):
+    corpus = ["alpha alpha beta"] * 3 + ["gamma delta epsilon zeta"]
+    monkeypatch.setattr(analyze, "clean_texts", lambda _pages, _dir: corpus)
+    pages = [{"url_canonical": f"http://k/{i}"} for i in range(4)]
+    stats = {"random_seed": 42}
+
+    first = q7_tfidf(pages, tmp_path, stats)
+    second = q7_tfidf(pages, tmp_path, stats)
+
+    assert first == second
+    assert "random_seed = 42" in first
+    assert "Worst sampled page:" in first
+    assert "after min_df=2 + sublinear_tf:" in first
 
 
 def test_q3_ranks_by_count_then_name():
