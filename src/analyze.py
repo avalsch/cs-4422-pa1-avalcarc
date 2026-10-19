@@ -11,11 +11,15 @@ from urllib.parse import parse_qsl, urlsplit
 
 import numpy as np
 import pandas as pd
+import trafilatura
 from sklearn.feature_extraction.text import CountVectorizer
+
+from storage import cache_path
 
 DEFAULT_PAGES = Path("artifacts/pages.jsonl")
 DEFAULT_LOG = Path("artifacts/crawl.log")
 DEFAULT_STATS = Path("artifacts/stats.json")
+DEFAULT_CACHE = Path("cache")
 
 DEFAULT_NEAR_DUP = 0.8
 NEAR_DUP_BANDS = (0.9, 0.8, 0.7, 0.5)
@@ -26,6 +30,7 @@ class AnalyzeConfig:
     pages: Path = DEFAULT_PAGES
     log: Path = DEFAULT_LOG
     stats: Path = DEFAULT_STATS
+    cache_dir: Path = DEFAULT_CACHE
 
 
 def parse_args(argv: list[str] | None = None) -> AnalyzeConfig:
@@ -55,9 +60,21 @@ def parse_args(argv: list[str] | None = None) -> AnalyzeConfig:
         help="stats.json written by stage one (crawl summary counters)",
     )
 
+    parser.add_argument(
+        "--cache-dir",
+        type=Path,
+        default=DEFAULT_CACHE,
+        help="directory holding the raw HTML cache written by stage one",
+    )
+
     args = parser.parse_args(argv)
 
-    return AnalyzeConfig(pages=args.pages, log=args.log, stats=args.stats)
+    return AnalyzeConfig(
+        pages=args.pages,
+        log=args.log,
+        stats=args.stats,
+        cache_dir=args.cache_dir,
+    )
 
 
 def load_jsonl(path: Path) -> list[dict[str, Any]]:
@@ -292,6 +309,76 @@ def q4_links(pages: list[dict[str, Any]], top: int = 5) -> str:
     )
 
 
+def _cleaned_words(cache_dir: Path, url: str) -> int | None:
+    path = cache_path(cache_dir, url)
+
+    if not path.exists():
+        return None
+
+    html = path.read_text(encoding="utf-8")
+    text = trafilatura.extract(html, include_comments=False, include_tables=False)
+
+    return len(text.split()) if text else 0
+
+
+def q5_boilerplate(pages: list[dict[str, Any]], cache_dir: Path, top: int = 5) -> str:
+    frame = pd.DataFrame(pages)
+    frame["raw_words"] = frame["text"].map(lambda text: len(text.split()))
+    frame["clean_words"] = [
+        _cleaned_words(cache_dir, url) for url in frame["url_canonical"]
+    ]
+
+    present = frame.dropna(subset=["clean_words"])
+    raw_mean = present["raw_words"].mean()
+    clean_mean = present["clean_words"].mean()
+    removed = 100 * (1 - clean_mean / raw_mean) if raw_mean else 0.0
+
+    raw_top = frame.sort_values(
+        ["raw_words", "url_canonical"], ascending=[False, True]
+    ).head(top)
+    clean_top = present.sort_values(
+        ["clean_words", "url_canonical"], ascending=[False, True]
+    ).head(top)
+
+    raw_urls = raw_top["url_canonical"].tolist()
+    raw_counts = raw_top["raw_words"].tolist()
+    clean_urls = clean_top["url_canonical"].tolist()
+    clean_counts = clean_top["clean_words"].tolist()
+
+    raw_rows = [
+        f"| {i} | {url} | {words} |"
+        for i, (url, words) in enumerate(zip(raw_urls, raw_counts), 1)
+    ]
+    clean_rows = [
+        f"| {i} | {url} | {int(words)} |"
+        for i, (url, words) in enumerate(zip(clean_urls, clean_counts), 1)
+    ]
+
+    return "\n".join(
+        [
+            "## Q5: boilerplate removal",
+            "",
+            "Strategy: trafilatura main-content extraction over the cached HTML.",
+            "",
+            f"- pages: {len(present)} of {len(frame)} with cached HTML",
+            f"- mean words before: {raw_mean:.1f}",
+            f"- mean words after: {clean_mean:.1f} ({removed:.1f}% removed)",
+            "",
+            "Top 5 longest by raw text:",
+            "",
+            "| rank | url | words |",
+            "| --- | --- | --- |",
+            *raw_rows,
+            "",
+            "Top 5 longest after removal:",
+            "",
+            "| rank | url | words |",
+            "| --- | --- | --- |",
+            *clean_rows,
+        ]
+    )
+
+
 def fetch_gaps(log: list[dict[str, Any]]) -> dict[str, float]:
     stamps: dict[str, list[datetime]] = defaultdict(list)
 
@@ -368,6 +455,7 @@ def main(argv: list[str] | None = None) -> int:
                 q2_duplicates(pages),
                 q3_errors(log),
                 q4_links(pages),
+                q5_boilerplate(pages, config.cache_dir),
                 q8_politeness(log, stats),
             ]
         )

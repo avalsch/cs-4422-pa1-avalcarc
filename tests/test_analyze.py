@@ -1,12 +1,16 @@
+import analyze
 from analyze import (
+    _cleaned_words,
     fetch_gaps,
     q1_patterns,
     q2_duplicates,
     q3_errors,
     q4_links,
+    q5_boilerplate,
     q8_politeness,
     shape,
 )
+from storage import write_cached_html
 
 
 def test_shape_replaces_number_date_and_id_segments():
@@ -92,6 +96,43 @@ def test_q2_detects_identical_near_and_self_declared():
     assert "identical: http://k/a == http://k/b" in text
     assert "near: http://k/a ~ http://k/c (Jaccard 0.80)" in text
     assert "self-declared: http://k/c -> http://k/a" in text
+
+
+def test_q5_boilerplate_reports_means_and_tables(monkeypatch, tmp_path):
+    pages = [
+        {
+            "url_canonical": "http://k/a",
+            "text": "one two three four five six seven eight",
+        },
+        {"url_canonical": "http://k/b", "text": "one two three four"},
+    ]
+    sizes = {"http://k/a": 4, "http://k/b": 2}
+    monkeypatch.setattr(analyze, "_cleaned_words", lambda _dir, url: sizes[url])
+
+    text = q5_boilerplate(pages, tmp_path)
+
+    assert "- pages: 2 of 2 with cached HTML" in text
+    assert "- mean words before: 6.0" in text
+    assert "- mean words after: 3.0 (50.0% removed)" in text
+    assert "| 1 | http://k/a | 8 |" in text
+    assert "| 1 | http://k/a | 4 |" in text
+
+
+def test_cleaned_words_missing_cache_returns_none(tmp_path):
+    assert _cleaned_words(tmp_path, "http://k/none") is None
+
+
+def test_cleaned_words_reads_cached_html(tmp_path):
+    write_cached_html(
+        tmp_path,
+        "http://k/a",
+        "<html><body><main><article><p>alpha beta gamma</p></article></main></body></html>",
+    )
+
+    words = _cleaned_words(tmp_path, "http://k/a")
+
+    assert words is not None
+    assert words > 0
 
 
 def test_q3_ranks_by_count_then_name():
