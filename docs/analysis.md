@@ -67,6 +67,14 @@ The entry not named in Req 13 is `out_of_scope`. Req 13 covers redirect loops an
 
 ## Q4: Top pages by in- and out-links
 
+### Incoming links
+
+The five most-linked pages are all site-wide navigation targets: the homepage (491), `www.kennesaw.edu/accreditation.php` (490), `www.kennesaw.edu/feedback.php` (489), `campus.kennesaw.edu/` (487) and `maps.kennesaw.edu/` (487). Their counts are effectively "every page links here" -- all 500 pages share the same header and footer, so these targets are linked from almost the entire corpus; the homepage is linked from 491 of the 500 pages. This is chrome, not content popularity.
+
+### Outgoing links
+
+The leaders are index pages: `facultyweb.kennesaw.edu/` (1380, a faculty directory), `azindex.kennesaw.edu/` (279, the A-Z index), `campus.kennesaw.edu/colleges-departments/` (201), `www.kennesaw.edu/degrees-programs/minors/index.php` (191), and `.../get-academic-advising/find-your-advisor.php` (188). The median page already carries 104 out-links from the shared chrome (only 3 pages exceed 200), so these five are just pages with a large listing on top of it.
+
 ## Q5: Boilerplate removal
 
 ## Q6: Text statistics and Zipf
