@@ -1,14 +1,17 @@
 import analyze
 from analyze import (
     _cleaned_words,
+    _term_counts,
     fetch_gaps,
     q1_patterns,
     q2_duplicates,
     q3_errors,
     q4_links,
     q5_boilerplate,
+    q6_words,
     q8_politeness,
     shape,
+    zipf_fit,
 )
 from storage import write_cached_html
 
@@ -133,6 +136,39 @@ def test_cleaned_words_reads_cached_html(tmp_path):
 
     assert words is not None
     assert words > 0
+
+
+def test_zipf_fit_recovers_exponent():
+    counts = [max(1, round(100000 / (rank**1.5))) for rank in range(1, 150)]
+
+    exponent, r2 = zipf_fit(counts)
+
+    assert 1.45 < exponent < 1.55
+    assert r2 > 0.99
+
+
+def test_term_counts_drop_stopwords():
+    texts = ["the cat sat on the mat", "the dog sat"]
+
+    all_terms = dict(_term_counts(texts, stop_words=None))
+    content = dict(_term_counts(texts, stop_words="english"))
+
+    assert all_terms["the"] == 3
+    assert "the" not in content
+    assert content["sat"] == 2
+
+
+def test_q6_reports_top_words_and_fit(monkeypatch, tmp_path):
+    monkeypatch.setattr(
+        analyze, "clean_texts", lambda _pages, _dir: ["alpha alpha beta gamma"]
+    )
+    pages = [{"url_canonical": "http://k/a"}]
+
+    text = q6_words(pages, tmp_path)
+
+    assert "1 boilerplate-removed pages, 4 tokens" in text
+    assert "| 1 | alpha | 2 |" in text
+    assert "exponent s = " in text
 
 
 def test_q3_ranks_by_count_then_name():

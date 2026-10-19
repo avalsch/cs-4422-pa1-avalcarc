@@ -309,7 +309,7 @@ def q4_links(pages: list[dict[str, Any]], top: int = 5) -> str:
     )
 
 
-def _cleaned_words(cache_dir: Path, url: str) -> int | None:
+def _cleaned_text(cache_dir: Path, url: str) -> str | None:
     path = cache_path(cache_dir, url)
 
     if not path.exists():
@@ -318,7 +318,17 @@ def _cleaned_words(cache_dir: Path, url: str) -> int | None:
     html = path.read_text(encoding="utf-8")
     text = trafilatura.extract(html, include_comments=False, include_tables=False)
 
-    return len(text.split()) if text else 0
+    return text or ""
+
+
+def _cleaned_words(cache_dir: Path, url: str) -> int | None:
+    text = _cleaned_text(cache_dir, url)
+
+    return None if text is None else len(text.split())
+
+
+def clean_texts(pages: list[dict[str, Any]], cache_dir: Path) -> list[str]:
+    return [_cleaned_text(cache_dir, p["url_canonical"]) or "" for p in pages]
 
 
 def q5_boilerplate(pages: list[dict[str, Any]], cache_dir: Path, top: int = 5) -> str:
@@ -375,6 +385,64 @@ def q5_boilerplate(pages: list[dict[str, Any]], cache_dir: Path, top: int = 5) -
             "| rank | url | words |",
             "| --- | --- | --- |",
             *clean_rows,
+        ]
+    )
+
+
+def _term_counts(texts: list[str], stop_words: str | None) -> list[tuple[str, int]]:
+    vectorizer = CountVectorizer(stop_words=stop_words)
+    matrix = vectorizer.fit_transform(texts)
+    totals = np.asarray(matrix.sum(axis=0)).ravel()
+    names = vectorizer.get_feature_names_out()
+    order = np.argsort(-totals, kind="stable")
+
+    return [(str(names[i]), int(totals[i])) for i in order]
+
+
+def zipf_fit(counts: list[int]) -> tuple[float, float]:
+    freq = np.asarray(counts, dtype=float)
+    ranks = np.arange(1, len(freq) + 1)
+    slope, intercept = np.polyfit(np.log(ranks), np.log(freq), 1)
+    predicted = slope * np.log(ranks) + intercept
+    residual = np.sum((np.log(freq) - predicted) ** 2)
+    total = np.sum((np.log(freq) - np.log(freq).mean()) ** 2)
+
+    return -float(slope), float(1 - residual / total)
+
+
+def q6_words(pages: list[dict[str, Any]], cache_dir: Path, top: int = 30) -> str:
+    texts = clean_texts(pages, cache_dir)
+    tokens = sum(len(text.split()) for text in texts)
+
+    all_terms = _term_counts(texts, stop_words=None)
+    content_terms = _term_counts(texts, stop_words="english")
+
+    exponent, r2 = zipf_fit([count for _, count in content_terms])
+    hapax = sum(1 for _, count in content_terms if count == 1)
+
+    def rows(terms: list[tuple[str, int]]) -> list[str]:
+        return [f"| {i} | {word} | {count} |" for i, (word, count) in enumerate(terms[:top], 1)]
+
+    return "\n".join(
+        [
+            "## Q6: word frequencies and Zipf",
+            "",
+            f"Corpus: {len(texts)} boilerplate-removed pages, {tokens} tokens.",
+            "",
+            f"Top {top} words (all):",
+            "",
+            "| rank | word | count |",
+            "| --- | --- | --- |",
+            *rows(all_terms),
+            "",
+            f"Top {top} words (stopwords removed):",
+            "",
+            "| rank | word | count |",
+            "| --- | --- | --- |",
+            *rows(content_terms),
+            "",
+            f"Zipf fit on the stopword-removed distribution: exponent s = {exponent:.2f}, "
+            f"R^2 = {r2:.2f}, {len(content_terms)} terms, {hapax} occurring once.",
         ]
     )
 
@@ -456,6 +524,7 @@ def main(argv: list[str] | None = None) -> int:
                 q3_errors(log),
                 q4_links(pages),
                 q5_boilerplate(pages, config.cache_dir),
+                q6_words(pages, config.cache_dir),
                 q8_politeness(log, stats),
             ]
         )
