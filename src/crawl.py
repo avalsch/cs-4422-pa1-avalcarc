@@ -10,8 +10,9 @@ if TYPE_CHECKING:
 from crawl_config import (
     Config,
 )
-from fetch import FetchError, fetch
+from fetch import ERR_ROBOTS, FetchError, fetch
 from parse import parse
+from robots import RobotsCache, RobotsPolicy
 from schema import Stats, make_page_record
 from storage import (
     EVENT_ENQUEUE,
@@ -35,27 +36,49 @@ def crawl(
     stats: Stats,
     stats_path: Path,
     start_time: float,
+    robots: RobotsPolicy | None = None,
 ) -> None:
     frontier: deque[str] = deque()
     seen: set[str] = set()
     stored: set[str] = set()
     last_request: dict[str, float] = {}
-
-    def wait(target: str) -> None:
-        # fetch calls this before every request it makes, including redirect
-        # hops, so each host's delay is enforced independently.
-        host = urlsplit(target).hostname or ""
-        _wait_for_host(host, config.delay, last_request)
-        last_request[host] = time.monotonic()
-        log_decision(log_f, EVENT_FETCH, target)
+    crawl_delays: dict[str, float] = {}
 
     def mark_seen(target: str) -> None:
         seen.add(target)
         stats["urls_seen"] = len(seen)
 
+    def wait(target: str) -> None:
+        host = urlsplit(target).hostname or ""
+        delay = max(config.delay, crawl_delays.get(host, 0.0))
+        _wait_for_host(host, delay, last_request)
+        last_request[host] = time.monotonic()
+        log_decision(log_f, EVENT_FETCH, target)
+
+    policy: RobotsPolicy = robots or RobotsCache(
+        config, session, wait=wait, delays=crawl_delays
+    )
+
+    def permit(target: str) -> bool:
+        if policy.can_fetch(target):
+            return True
+
+        if target not in seen:
+            mark_seen(target)
+            stats["robots_skips"] += 1
+            log_decision(log_f, EVENT_SKIP, target, failure_reason=ERR_ROBOTS)
+
+        return False
+
     for seed in config.seeds:
         if seed in seen:
             log_decision(log_f, EVENT_SKIP, seed, failure_reason="already_seen")
+            continue
+
+        if not policy.can_fetch(seed):
+            mark_seen(seed)
+            stats["robots_skips"] += 1
+            log_decision(log_f, EVENT_SKIP, seed, failure_reason=ERR_ROBOTS)
             continue
 
         mark_seen(seed)
@@ -65,9 +88,12 @@ def crawl(
     while frontier and stats["pages_fetched"] < config.budget:
         url = frontier.popleft()
 
-        result = fetch(url, config, session, wait=wait)
+        result = fetch(url, config, session, permit=permit, wait=wait)
 
         if isinstance(result, FetchError):
+            if result.error == ERR_ROBOTS:
+                continue
+
             log_decision(
                 log_f,
                 EVENT_ERROR,
@@ -93,6 +119,12 @@ def crawl(
         for link in parsed.out_links:
             if link in seen:
                 log_decision(log_f, EVENT_SKIP, link, failure_reason="already_seen")
+                continue
+
+            if not policy.can_fetch(link):
+                mark_seen(link)
+                stats["robots_skips"] += 1
+                log_decision(log_f, EVENT_SKIP, link, failure_reason=ERR_ROBOTS)
                 continue
 
             mark_seen(link)

@@ -8,7 +8,7 @@ import requests
 
 import crawl
 from crawl_config import Config
-from fetch import ERR_HTTP, ERR_TIMEOUT, FetchError, FetchSuccess
+from fetch import ERR_HTTP, ERR_ROBOTS, ERR_TIMEOUT, FetchError, FetchSuccess
 from schema import Stats
 
 SEED = "http://kennesaw.edu/"
@@ -45,7 +45,7 @@ class FakeFetcher:
         self.finals = finals or {}
         self.calls = []
 
-    def __call__(self, url, _config, _session=None, wait=None):
+    def __call__(self, url, _config, _session=None, wait=None, permit=None):
         if wait is not None:
             wait(url)
 
@@ -57,15 +57,32 @@ class FakeFetcher:
         if url in self.pages:
             final = self.finals.get(url, url)
 
-            if wait is not None and final != url:
-                wait(final)
+            if final != url:
+                if permit is not None and not permit(final):
+                    return FetchError(ERR_ROBOTS, 302, url)
+
+                if wait is not None:
+                    wait(final)
 
             return FetchSuccess(200, self.pages[url], final)
 
         return FetchError(ERR_HTTP, 404, url)
 
 
-def run(monkeypatch, fetcher, tmp_path, config=None, stats=None):
+class AllowAllRobots:
+    def can_fetch(self, url):
+        return True
+
+
+class DenyRobots:
+    def __init__(self, blocked):
+        self.blocked = set(blocked)
+
+    def can_fetch(self, url):
+        return url not in self.blocked
+
+
+def run(monkeypatch, fetcher, tmp_path, config=None, stats=None, robots=None):
     config = config or make_config()
     stats = stats or make_stats()
     pages_f = io.StringIO()
@@ -80,6 +97,7 @@ def run(monkeypatch, fetcher, tmp_path, config=None, stats=None):
         stats,
         tmp_path / "stats.json",
         time.time(),
+        robots if robots is not None else AllowAllRobots(),
     )
 
     return pages_f, log_f, stats
@@ -330,3 +348,72 @@ def test_wait_for_host(monkeypatch, delay, last_request, expected):
     crawl._wait_for_host("kennesaw.edu", delay, last_request)
 
     assert sleeps == expected
+
+
+def test_robots_blocks_discovered_link(monkeypatch, tmp_path):
+    fetcher = FakeFetcher({SEED: "<a href='/a'>A</a>", PAGE_A: "<p>a</p>"})
+
+    pages_f, log_f, stats = run(
+        monkeypatch, fetcher, tmp_path, robots=DenyRobots([PAGE_A])
+    )
+
+    assert fetcher.calls == [SEED]
+    assert [r["url_canonical"] for r in records(pages_f)] == [SEED]
+    assert stats["robots_skips"] == 1
+    assert [
+        (e["url"], e["failure_reason"]) for e in events(log_f) if e["event"] == "skip"
+    ] == [(PAGE_A, "robots_blocked")]
+
+
+def test_robots_blocks_seed(monkeypatch, tmp_path):
+    fetcher = FakeFetcher({SEED: "<p>hi</p>"})
+
+    _pages_f, log_f, stats = run(
+        monkeypatch, fetcher, tmp_path, robots=DenyRobots([SEED])
+    )
+
+    assert fetcher.calls == []
+    assert stats["robots_skips"] == 1
+    assert [(e["event"], e["failure_reason"]) for e in events(log_f)] == [
+        ("skip", "robots_blocked")
+    ]
+
+
+def test_robots_blocked_url_counted_once(monkeypatch, tmp_path):
+    fetcher = FakeFetcher(
+        {
+            SEED: "<a href='/a'>A</a><a href='/b'>B</a>",
+            PAGE_A: "<a href='/b'>B again</a>",
+            PAGE_B: "<p>b</p>",
+        }
+    )
+
+    _pages_f, log_f, stats = run(
+        monkeypatch,
+        fetcher,
+        tmp_path,
+        config=make_config(budget=3),
+        robots=DenyRobots([PAGE_B]),
+    )
+
+    blocked = [e for e in events(log_f) if e["failure_reason"] == "robots_blocked"]
+    assert [(e["url"]) for e in blocked] == [PAGE_B]
+    assert stats["robots_skips"] == 1
+
+
+def test_robots_blocks_redirect_hop(monkeypatch, tmp_path):
+    target = "http://kennesaw.edu/private"
+    fetcher = FakeFetcher({SEED: "<p>hi</p>"}, finals={SEED: target})
+
+    pages_f, log_f, stats = run(
+        monkeypatch, fetcher, tmp_path, robots=DenyRobots([target])
+    )
+
+    assert stats["pages_fetched"] == 0
+    assert [r["url_canonical"] for r in records(pages_f)] == []
+    assert stats["robots_skips"] == 1
+    assert [(e["event"], e["url"], e["failure_reason"]) for e in events(log_f)] == [
+        ("enqueue", SEED, None),
+        ("fetch", SEED, None),
+        ("skip", target, "robots_blocked"),
+    ]
