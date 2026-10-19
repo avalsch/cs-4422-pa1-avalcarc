@@ -4,6 +4,7 @@ from argparse import ArgumentParser
 from pathlib import Path
 
 import requests
+import truststore
 
 from canonicalize import canonicalize
 from crawl import crawl
@@ -117,6 +118,9 @@ def parse_args() -> Config:
 
 
 def main() -> int:
+    # verify against the OS store instead of certifi
+    truststore.inject_into_ssl()
+
     config = parse_args()
 
     config.output_dir.mkdir(parents=True, exist_ok=True)
