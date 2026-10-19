@@ -33,6 +33,7 @@ def log_decision(
     *,
     failure_reason: str | None = None,
     status: int | None = None,
+    target: str | None = None,
 ) -> None:
     entry: LogEntry = {
         "ts": utc_now(),
@@ -40,6 +41,7 @@ def log_decision(
         "url": url,
         "failure_reason": failure_reason,
         "status": status,
+        "target": target,
     }
 
     _write_line(f, entry)

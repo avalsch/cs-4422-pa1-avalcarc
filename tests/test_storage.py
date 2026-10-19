@@ -74,7 +74,22 @@ def test_log_decision_entry_schema():
     assert entry["url"] == "http://kennesaw.edu/x"
     assert entry["failure_reason"] == "timeout"
     assert entry["status"] == 503
+    assert entry["target"] is None
     assert ISO_Z.fullmatch(entry["ts"])
+
+
+def test_log_decision_records_a_target():
+    buf = io.StringIO()
+
+    log_decision(
+        buf,
+        EVENT_ERROR,
+        "http://kennesaw.edu/x",
+        failure_reason="out_of_scope",
+        target="http://example.com/y",
+    )
+
+    assert json.loads(buf.getvalue())["target"] == "http://example.com/y"
 
 
 def test_log_decision_defaults_to_no_failure_or_status():

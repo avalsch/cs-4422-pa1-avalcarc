@@ -10,6 +10,7 @@ class LogEntry(TypedDict):
     url: str
     failure_reason: str | None
     status: int | None
+    target: str | None
 
 
 class Stats(TypedDict):

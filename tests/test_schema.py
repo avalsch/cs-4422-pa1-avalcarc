@@ -55,6 +55,7 @@ def test_log_entry_fields_match_spec():
         "url",
         "failure_reason",
         "status",
+        "target",
     }
 
 

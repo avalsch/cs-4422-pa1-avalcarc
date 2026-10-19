@@ -109,6 +109,7 @@ def crawl(
                 url,
                 failure_reason=result.error,
                 status=result.status,
+                target=result.target,
             )
             continue
 

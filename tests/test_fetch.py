@@ -173,6 +173,7 @@ def test_redirect_out_of_scope():
 
     assert isinstance(result, FetchError)
     assert result.error == ERR_OUT_OF_SCOPE
+    assert result.target == "http://example.com/x"
 
 
 def test_redirect_3xx_without_location():

@@ -39,6 +39,7 @@ class FetchError:
     error: str
     status: int | None = None
     url: str | None = None
+    target: str | None = None
 
 
 def fetch(
@@ -79,7 +80,9 @@ def fetch(
                 target = canonicalize(location, base=current)
 
                 if target is None:
-                    return FetchError(ERR_OUT_OF_SCOPE, status, current)
+                    return FetchError(
+                        ERR_OUT_OF_SCOPE, status, current, target=location
+                    )
 
                 if target in visited:
                     return FetchError(ERR_REDIRECT_LOOP, status, current)
