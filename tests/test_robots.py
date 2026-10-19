@@ -54,13 +54,47 @@ class FakeSession:
         return self.responses.get(url, FakeResponse(404))
 
 
-def cache(session, config=None, wait=None, delays=None):
+def cache(session, config=None, wait=None, delays=None, on_error=None):
     return RobotsCache(
         config or make_config(),
         session,
         wait=wait,
         delays=delays,
+        on_error=on_error,
     )
+
+
+def test_reports_unreachable_robots_on_server_error():
+    errors = []
+    session = FakeSession({ROBOTS_URL: FakeResponse(503)})
+
+    cache(session, on_error=lambda url, status: errors.append((url, status))).can_fetch(
+        HOST
+    )
+
+    assert errors == [(ROBOTS_URL, 503)]
+
+
+def test_reports_unreachable_robots_on_connection_error():
+    errors = []
+    session = FakeSession(error=requests.exceptions.ConnectionError())
+
+    cache(session, on_error=lambda url, status: errors.append((url, status))).can_fetch(
+        HOST
+    )
+
+    assert errors == [(ROBOTS_URL, None)]
+
+
+def test_does_not_report_available_robots():
+    errors = []
+    session = FakeSession({ROBOTS_URL: FakeResponse(404)})
+
+    cache(session, on_error=lambda url, status: errors.append((url, status))).can_fetch(
+        HOST
+    )
+
+    assert errors == []
 
 
 def test_parses_and_caches_rules():

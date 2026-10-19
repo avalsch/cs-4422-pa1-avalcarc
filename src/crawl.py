@@ -12,7 +12,7 @@ from crawl_config import (
 )
 from fetch import ERR_ROBOTS, FetchError, fetch
 from parse import parse
-from robots import RobotsCache, RobotsPolicy
+from robots import ROBOTS_UNREACHABLE, RobotsCache, RobotsPolicy
 from schema import Stats, make_page_record
 from storage import (
     EVENT_ENQUEUE,
@@ -64,8 +64,13 @@ def crawl(
         last_request[host] = time.monotonic()
         log_decision(log_f, EVENT_FETCH, target)
 
+    def robots_error(url: str, status: int | None) -> None:
+        log_decision(
+            log_f, EVENT_ERROR, url, failure_reason=ROBOTS_UNREACHABLE, status=status
+        )
+
     policy: RobotsPolicy = robots or RobotsCache(
-        config, session, wait=wait, delays=crawl_delays
+        config, session, wait=wait, delays=crawl_delays, on_error=robots_error
     )
 
     def permit(target: str) -> bool:

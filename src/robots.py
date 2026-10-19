@@ -12,6 +12,7 @@ ROBOTS_PATH = "/robots.txt"
 ROBOTS_MAX_BYTES = 512 * 1024
 CHUNK_SIZE = 8192
 MAX_CRAWL_DELAY = 60.0
+ROBOTS_UNREACHABLE = "robots_unreachable"
 
 _ALLOW_ALL_RULES = "User-agent: *\nAllow: /\n"
 _DISALLOW_ALL_RULES = "User-agent: *\nDisallow: /\n"
@@ -59,11 +60,13 @@ class RobotsCache:
         session: requests.Session,
         wait: Callable[[str], None] | None = None,
         delays: dict[str, float] | None = None,
+        on_error: Callable[[str, int | None], None] | None = None,
     ) -> None:
         self._config = config
         self._session = session
         self._wait = wait
         self._delays = delays if delays is not None else {}
+        self._on_error = on_error
         self._rules: dict[str, RobotsRules] = {}
 
     def rules_for(self, url: str) -> RobotsRules:
@@ -104,11 +107,17 @@ class RobotsCache:
                     return _parse(_read_text(resp), self._config.user_agent)
 
                 if status == 429 or 500 <= status < 600:
+                    self._report(url, status)
                     return _disallow_all(self._config.user_agent)
 
                 return _allow_all(self._config.user_agent)
         except requests.exceptions.RequestException:
+            self._report(url, None)
             return _disallow_all(self._config.user_agent)
+
+    def _report(self, url: str, status: int | None) -> None:
+        if self._on_error is not None:
+            self._on_error(url, status)
 
 
 def _origin(url: str) -> str:
