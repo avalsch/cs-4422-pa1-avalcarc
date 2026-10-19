@@ -1,6 +1,7 @@
 import json
 import sys
 from argparse import ArgumentParser
+from collections import Counter
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
@@ -73,6 +74,27 @@ def header(
     )
 
 
+def q3_errors(log: list[dict[str, Any]]) -> str:
+    counts = Counter(e["failure_reason"] for e in log if e["event"] == "error")
+    ranked = sorted(counts.items(), key=lambda kv: (-kv[1], kv[0]))[:5]
+
+    rows = [
+        f"| {i} | {reason} | {count} |" for i, (reason, count) in enumerate(ranked, 1)
+    ]
+
+    return "\n".join(
+        [
+            "## Q3: most common fetch failures",
+            "",
+            "| rank | failure_reason | count |",
+            "| --- | --- | --- |",
+            *rows,
+            "",
+            f"Total: {sum(counts.values())} errors.",
+        ]
+    )
+
+
 def main(argv: list[str] | None = None) -> int:
     config = parse_args(argv)
 
@@ -80,7 +102,14 @@ def main(argv: list[str] | None = None) -> int:
     log = load_jsonl(config.log)
     stats = load_json(config.stats)
 
-    print(header(pages, log, stats))
+    print(
+        "\n\n".join(
+            [
+                header(pages, log, stats),
+                q3_errors(log),
+            ]
+        )
+    )
 
     return 0
 
