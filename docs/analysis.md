@@ -1,9 +1,9 @@
 # Stage two: analysis numbers
 
 - pages: 500 in pages.jsonl, 500 in stats.json
-- URLs seen: 6660
-- wall clock: 1686.1 s
-- logged decisions: 9456
+- URLs seen: 6663
+- wall clock: 1011.5 s
+- logged decisions: 9493
 
 ## Q1: URL patterns by budget
 
@@ -31,7 +31,7 @@ Grouped by host + first 2 path segments; 500 pages across 185 patterns, top 15 b
 
 Near-duplicate threshold: 0.80 (5-gram word shingles, Jaccard).
 
-- byte-identical: 90 pages (18.0%), 43 duplicate groups
+- byte-identical: 88 pages (17.6%), 42 duplicate groups
 - near-duplicate: 11 pages (2.2%), 19 pairs at Jaccard >= 0.80
 - self-declared canonical: 297 pages (59.4%)
 
@@ -53,12 +53,13 @@ Examples:
 
 | rank | failure_reason | count |
 | --- | --- | --- |
-| 1 | http_error (404) | 7 |
-| 2 | out_of_scope | 7 |
-| 3 | http_error (403) | 2 |
-| 4 | wrong_content_type | 1 |
+| 1 | robots_unreachable | 50 |
+| 2 | http_error (404) | 7 |
+| 3 | out_of_scope | 7 |
+| 4 | http_error (403) | 2 |
+| 5 | wrong_content_type | 1 |
 
-Total: 17 errors.
+Total: 67 errors.
 
 ## Q4: top pages by links
 
@@ -67,10 +68,10 @@ Top 5 by incoming links (from crawled pages):
 | rank | url | in-links |
 | --- | --- | --- |
 | 1 | https://www.kennesaw.edu/ | 491 |
-| 2 | https://www.kennesaw.edu/accreditation.php | 491 |
-| 3 | https://www.kennesaw.edu/feedback.php | 490 |
-| 4 | https://campus.kennesaw.edu/ | 488 |
-| 5 | https://maps.kennesaw.edu/ | 488 |
+| 2 | https://www.kennesaw.edu/accreditation.php | 490 |
+| 3 | https://www.kennesaw.edu/feedback.php | 489 |
+| 4 | https://campus.kennesaw.edu/ | 487 |
+| 5 | https://maps.kennesaw.edu/ | 487 |
 
 Top 5 by outgoing links:
 
@@ -87,8 +88,8 @@ Top 5 by outgoing links:
 Strategy: trafilatura main-content extraction over the cached HTML.
 
 - pages: 500 of 500 with cached HTML
-- mean words before: 1091.1
-- mean words after: 398.6 (63.5% removed)
+- mean words before: 1089.8
+- mean words after: 398.5 (63.4% removed)
 
 Top 5 longest by raw text:
 
@@ -112,66 +113,66 @@ Top 5 longest after removal:
 
 ## Q6: word frequencies and Zipf
 
-Corpus: 500 boilerplate-removed pages, 199311 tokens.
+Corpus: 500 boilerplate-removed pages, 199261 tokens.
 
 Top 30 words (all):
 
 | rank | word | count |
 | --- | --- | --- |
-| 1 | the | 8146 |
-| 2 | and | 7980 |
-| 3 | to | 5698 |
-| 4 | of | 4741 |
-| 5 | in | 2990 |
-| 6 | for | 2572 |
+| 1 | the | 8144 |
+| 2 | and | 7973 |
+| 3 | to | 5697 |
+| 4 | of | 4737 |
+| 5 | in | 2991 |
+| 6 | for | 2569 |
 | 7 | is | 1711 |
-| 8 | ksu | 1658 |
+| 8 | ksu | 1655 |
 | 9 | you | 1589 |
-| 10 | with | 1561 |
+| 10 | with | 1560 |
 | 11 | students | 1502 |
-| 12 | your | 1334 |
+| 12 | your | 1335 |
 | 13 | kennesaw | 1296 |
 | 14 | resources | 1233 |
 | 15 | on | 1219 |
 | 16 | or | 1210 |
 | 17 | campus | 1128 |
-| 18 | student | 1127 |
+| 18 | student | 1126 |
 | 19 | university | 1112 |
-| 20 | are | 1097 |
+| 20 | are | 1096 |
 | 21 | our | 1074 |
 | 22 | that | 1057 |
 | 23 | at | 981 |
 | 24 | as | 960 |
 | 25 | state | 959 |
-| 26 | an | 896 |
+| 26 | an | 895 |
 | 27 | be | 892 |
 | 28 | by | 888 |
 | 29 | we | 808 |
-| 30 | services | 748 |
+| 30 | services | 747 |
 
 Top 30 words (stopwords removed):
 
 | rank | word | count |
 | --- | --- | --- |
-| 1 | ksu | 1658 |
+| 1 | ksu | 1655 |
 | 2 | students | 1502 |
 | 3 | kennesaw | 1296 |
 | 4 | resources | 1233 |
 | 5 | campus | 1128 |
-| 6 | student | 1127 |
+| 6 | student | 1126 |
 | 7 | university | 1112 |
 | 8 | state | 959 |
-| 9 | services | 748 |
+| 9 | services | 747 |
 | 10 | academic | 745 |
 | 11 | information | 729 |
 | 12 | sign | 617 |
 | 13 | research | 602 |
-| 14 | faculty | 580 |
+| 14 | faculty | 579 |
 | 15 | program | 550 |
 | 16 | college | 521 |
-| 17 | programs | 487 |
+| 17 | programs | 486 |
 | 18 | community | 452 |
-| 19 | education | 426 |
+| 19 | education | 425 |
 | 20 | support | 391 |
 | 21 | center | 389 |
 | 22 | learning | 388 |
@@ -179,12 +180,12 @@ Top 30 words (stopwords removed):
 | 24 | engineering | 362 |
 | 25 | 000 | 361 |
 | 26 | department | 350 |
-| 27 | data | 333 |
+| 27 | data | 332 |
 | 28 | technology | 316 |
 | 29 | graduate | 315 |
 | 30 | help | 304 |
 
-Zipf fit on the stopword-removed distribution: exponent s = 1.25, R^2 = 0.96, 11817 terms, 4992 occurring once.
+Zipf fit on the stopword-removed distribution: exponent s = 1.25, R^2 = 0.96, 11818 terms, 4993 occurring once.
 
 ## Q7: TF-IDF keywords
 
@@ -192,119 +193,119 @@ Sampled 5 pages with random_seed = 42.
 
 | # | words | url | top 5 keywords |
 | --- | --- | --- | --- |
-| 1 | 104 | https://campus.kennesaw.edu/ | find (0.29), services (0.29), index (0.28), tools (0.27), policies (0.25) |
+| 1 | 104 | https://campus.kennesaw.edu/ | services (0.29), find (0.29), index (0.28), tools (0.27), policies (0.25) |
 | 2 | 40 | https://campus.kennesaw.edu/current-students/student-affairs/wellbeing/counseling/ | counseling (0.51), psychological (0.34), caps (0.24), 6600 (0.23), emotions (0.22) |
 | 3 | 202 | https://campus.kennesaw.edu/policies-governance/staff-senate/ | staff (0.53), senate (0.48), and (0.18), body (0.17), the (0.14) |
 | 4 | 455 | https://campus.kennesaw.edu/colleges-departments/bagwell/iteach/ | iteach (0.34), and (0.28), pd (0.24), instructional (0.21), coaches (0.14) |
-| 5 | 853 | https://campus.kennesaw.edu/colleges-departments/wellstar/academics/social-work-human-services/ | nonprofit (0.30), social (0.29), human (0.27), and (0.27), msw (0.20) |
+| 5 | 55 | https://campus.kennesaw.edu/faculty-staff/academic-affairs/student-success/smart-center/ | smart (0.65), tutoring (0.28), students (0.20), 80 (0.19), ksu (0.18) |
 
 Worst sampled page: https://campus.kennesaw.edu/policies-governance/staff-senate/ (202 words, 2 of 5 keywords are stopwords or numbers).
 - before: staff (0.53), senate (0.48), and (0.18), body (0.17), the (0.14)
-- after stop_words + min_df=2 + sublinear_tf: senate (0.31), body (0.20), staff (0.19), meetings (0.17), updated (0.17)
+- after stop_words + min_df=2 + sublinear_tf: senate (0.31), body (0.20), staff (0.20), meetings (0.17), updated (0.17)
 
-19 of 500 pages are shorter than 50 words.
+20 of 500 pages are shorter than 50 words.
 
 ## Q8: politeness evidence
 
-**Q8.a delay compliance.** 63 hosts, minimum gap 1.00 s, 0 below the 1.00 s floor.
+**Q8.a delay compliance.** 64 hosts, minimum gap 1.00 s, 0 below the 1.00 s floor.
 
 | host | min gap (s) |
 | --- | --- |
 | www.kennesaw.edu | 1.00 |
 | campus.kennesaw.edu | 1.00 |
-| owlexpress.kennesaw.edu | 1.00 |
-| vpn.kennesaw.edu | 1.00 |
-| alumni.kennesaw.edu | 1.00 |
 | degreeworks.kennesaw.edu | 1.00 |
 | service.kennesaw.edu | 1.00 |
+| alumni.kennesaw.edu | 1.00 |
+| owlexpress.kennesaw.edu | 1.00 |
+| vpn.kennesaw.edu | 1.00 |
 | sportspark.kennesaw.edu | 1.00 |
 | kennesawtower.kennesaw.edu | 1.00 |
-| ccse.kennesaw.edu | 2.76 |
-| campusservices.kennesaw.edu | 3.00 |
+| ccse.kennesaw.edu | 2.91 |
+| campusservices.kennesaw.edu | 2.94 |
 | fiscalservices.kennesaw.edu | 5.53 |
-| azindex.kennesaw.edu | 6.53 |
+| azindex.kennesaw.edu | 6.82 |
 | bookstore.kennesaw.edu | 10.00 |
 | libanswers.kennesaw.edu | 10.00 |
-| financialaid.kennesaw.edu | 11.02 |
-| ksumail.kennesaw.edu | 13.98 |
-| registrar.kennesaw.edu | 27.22 |
-| diversity.kennesaw.edu | 29.85 |
-| sportsrec.kennesaw.edu | 39.91 |
-| owllife.kennesaw.edu | 41.71 |
-| libguides.kennesaw.edu | 42.73 |
+| financialaid.kennesaw.edu | 10.99 |
+| ksumail.kennesaw.edu | 14.07 |
+| registrar.kennesaw.edu | 26.93 |
+| diversity.kennesaw.edu | 28.58 |
+| sportsrec.kennesaw.edu | 39.53 |
+| owllife.kennesaw.edu | 40.56 |
+| libguides.kennesaw.edu | 43.71 |
 | catalog.kennesaw.edu | 60.00 |
-| owltrain.kennesaw.edu | 72.42 |
-| digitalcommons.kennesaw.edu | 98.35 |
-| advising.kennesaw.edu | 101.35 |
-| cpe.kennesaw.edu | 166.21 |
-| calendar.kennesaw.edu | 199.23 |
-| maps.kennesaw.edu | 201.66 |
-| kennesaw.edu | 209.68 |
-| payroll.kennesaw.edu | 303.65 |
-| hr.kennesaw.edu | 304.71 |
-| experience.kennesaw.edu | 304.83 |
-| artspurchase.kennesaw.edu | 308.04 |
-| careers.kennesaw.edu | 414.30 |
-| learnonline.kennesaw.edu | 430.81 |
-| facultyweb.kennesaw.edu | 460.48 |
-| ksuhousing.kennesaw.edu | 466.94 |
-| studenthealth.kennesaw.edu | 469.17 |
-| dga.kennesaw.edu | 567.76 |
-| directory.kennesaw.edu | 1283.36 |
-| uits.kennesaw.edu | 1405.68 |
-| orientation.kennesaw.edu | 1589.61 |
-| commencement.kennesaw.edu | 1590.06 |
-| police.kennesaw.edu | 1590.81 |
-| visit.kennesaw.edu | 1593.40 |
-| handbooks.kennesaw.edu | 1597.12 |
-| testing.kennesaw.edu | 1598.62 |
-| writingcenter.kennesaw.edu | 1599.39 |
-| counseling.kennesaw.edu | 1605.44 |
-| wellness.kennesaw.edu | 1607.88 |
-| cyaar.kennesaw.edu | 1608.61 |
-| care.kennesaw.edu | 1610.39 |
-| livesafe.kennesaw.edu | 1611.97 |
-| esports.kennesaw.edu | 1612.21 |
-| dining.kennesaw.edu | 1613.12 |
-| parking.kennesaw.edu | 1615.18 |
-| taloncard.kennesaw.edu | 1615.46 |
-| events.kennesaw.edu | 1615.76 |
-| talon.kennesaw.edu | 1617.13 |
-| stratcomm.kennesaw.edu | 1626.87 |
-| homecoming.kennesaw.edu | 1632.76 |
-| giving.kennesaw.edu | 1634.41 |
+| owltrain.kennesaw.edu | 72.15 |
+| digitalcommons.kennesaw.edu | 97.34 |
+| advising.kennesaw.edu | 100.67 |
+| cpe.kennesaw.edu | 136.88 |
+| calendar.kennesaw.edu | 169.37 |
+| maps.kennesaw.edu | 171.48 |
+| kennesaw.edu | 177.67 |
+| experience.kennesaw.edu | 273.93 |
+| artspurchase.kennesaw.edu | 277.03 |
+| payroll.kennesaw.edu | 302.54 |
+| hr.kennesaw.edu | 303.58 |
+| epay.kennesaw.edu | 343.48 |
+| dga.kennesaw.edu | 386.26 |
+| learnonline.kennesaw.edu | 399.28 |
+| careers.kennesaw.edu | 411.54 |
+| facultyweb.kennesaw.edu | 429.13 |
+| ksuhousing.kennesaw.edu | 434.56 |
+| studenthealth.kennesaw.edu | 436.97 |
+| directory.kennesaw.edu | 640.89 |
+| uits.kennesaw.edu | 762.13 |
+| orientation.kennesaw.edu | 915.85 |
+| commencement.kennesaw.edu | 916.50 |
+| police.kennesaw.edu | 917.20 |
+| visit.kennesaw.edu | 919.70 |
+| handbooks.kennesaw.edu | 923.03 |
+| testing.kennesaw.edu | 924.56 |
+| writingcenter.kennesaw.edu | 925.22 |
+| counseling.kennesaw.edu | 931.37 |
+| wellness.kennesaw.edu | 933.74 |
+| cyaar.kennesaw.edu | 934.47 |
+| care.kennesaw.edu | 936.06 |
+| esports.kennesaw.edu | 937.73 |
+| livesafe.kennesaw.edu | 937.74 |
+| dining.kennesaw.edu | 938.61 |
+| events.kennesaw.edu | 941.09 |
+| parking.kennesaw.edu | 941.13 |
+| taloncard.kennesaw.edu | 941.35 |
+| talon.kennesaw.edu | 943.04 |
+| stratcomm.kennesaw.edu | 952.63 |
+| homecoming.kennesaw.edu | 958.56 |
+| giving.kennesaw.edu | 960.16 |
 
 **Q8.b robots.txt.**
 
-Hosts with explicit rules (robots.txt reachable, host also served pages):
+Hosts with explicit rules (robots.txt reachable):
 
 | host | blocked | pages |
 | --- | --- | --- |
 | calendar.kennesaw.edu | 23 | 2 |
+| libguides.kennesaw.edu | 19 | 0 |
+| programfinder.kennesaw.edu | 5 | 0 |
 | digitalcommons.kennesaw.edu | 3 | 1 |
+| mysportsrec.kennesaw.edu | 2 | 0 |
 | catalog.kennesaw.edu | 2 | 3 |
+| opensource.kennesaw.edu | 1 | 0 |
+| istart.kennesaw.edu | 1 | 0 |
+| go.kennesaw.edu | 1 | 0 |
+| ksuweb.kennesaw.edu | 1 | 0 |
 
-Hosts with no pages served (robots.txt unreachable, or a blanket disallow):
+Hosts with robots.txt unreachable (disallow-all policy):
 
 | host | blocked |
 | --- | --- |
-| libguides.kennesaw.edu | 19 |
 | owlexpresstest.kennesaw.edu | 6 |
-| programfinder.kennesaw.edu | 5 |
 | bandir.kennesaw.edu | 4 |
 | banssb8preweb01.kennesaw.edu | 4 |
-| epay.kennesaw.edu | 3 |
 | ksuconnect.kennesaw.edu | 2 |
-| mysportsrec.kennesaw.edu | 2 |
 | gss-patchban.kennesaw.edu | 2 |
 | banssb8btaweb01.kennesaw.edu | 2 |
 | ksutv.kennesaw.edu | 1 |
-| opensource.kennesaw.edu | 1 |
 | onbaseappforms.kennesaw.edu | 1 |
-| istart.kennesaw.edu | 1 |
 | ccsenetlab2.kennesaw.edu | 1 |
-| go.kennesaw.edu | 1 |
-| ksuweb.kennesaw.edu | 1 |
 | banner.kennesaw.edu | 1 |
 | onbase.kennesaw.edu | 1 |
 | bannavdevweb.kennesaw.edu | 1 |
@@ -347,4 +348,4 @@ Hosts with no pages served (robots.txt unreachable, or a blanket disallow):
 | niagaraprdweb01.win.kennesaw.edu | 1 |
 | sasreports.kennesaw.edu | 1 |
 
-**Q8.c request rate.** 500 pages / 1686.1 s = 0.30 pages/s; 907 requests / 1686.1 s = 0.54 requests/s.
+**Q8.c request rate.** 500 pages / 1011.5 s = 0.49 pages/s; 907 requests / 1011.5 s = 0.90 requests/s.
