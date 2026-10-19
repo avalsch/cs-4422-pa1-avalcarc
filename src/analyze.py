@@ -498,9 +498,11 @@ def q7_tfidf(
     before = _keywords(texts, picks, TfidfVectorizer())
     penalties = {index: _keyword_penalty(before[index]) for index in picks}
     worst = max(picks, key=lambda index: (penalties[index], -lengths[index], -index))
-    after = _keywords(texts, [worst], TfidfVectorizer(min_df=2, sublinear_tf=True))[
-        worst
-    ]
+    after = _keywords(
+        texts,
+        [worst],
+        TfidfVectorizer(stop_words="english", min_df=2, sublinear_tf=True),
+    )[worst]
 
     thin = sum(1 for length in lengths if length < MIN_WORDS)
 
@@ -527,7 +529,7 @@ def q7_tfidf(
                 f"{penalties[worst]} of 5 keywords are stopwords or numbers)."
             ),
             f"- before: {keywords(before[worst])}",
-            f"- after min_df=2 + sublinear_tf: {keywords(after)}",
+            f"- after stop_words + min_df=2 + sublinear_tf: {keywords(after)}",
             "",
             f"{thin} of {len(texts)} pages are shorter than {MIN_WORDS} words.",
         ]

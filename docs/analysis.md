@@ -195,7 +195,7 @@ Sampled 5 pages with random_seed = 42.
 
 Worst sampled page: https://campus.kennesaw.edu/current-students/ (384 words, 3 of 5 keywords are stopwords or numbers).
 - before: you (0.23), to (0.22), core (0.21), do (0.20), advisor (0.18)
-- after min_df=2 + sublinear_tf: core (0.19), impacts (0.17), advisor (0.16), my (0.16), do (0.14)
+- after stop_words + min_df=2 + sublinear_tf: core (0.23), impacts (0.20), advisor (0.19), curriculum (0.16), major (0.16)
 
 0 of 50 pages are shorter than 50 words.
 

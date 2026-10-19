@@ -201,7 +201,7 @@ def test_q7_is_deterministic_per_seed(monkeypatch, tmp_path):
     assert first == second
     assert "random_seed = 42" in first
     assert "Worst sampled page:" in first
-    assert "after min_df=2 + sublinear_tf:" in first
+    assert "after stop_words + min_df=2 + sublinear_tf:" in first
 
 
 def test_q3_ranks_by_count_then_name():
