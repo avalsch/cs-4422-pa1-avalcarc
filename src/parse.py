@@ -82,8 +82,8 @@ def _effective_base(soup: BeautifulSoup, base_url: str) -> str:
     if not base_tag:
         return base_url
 
-    candidate = urljoin(base_url, _attr(base_tag, "href").strip())
-    return candidate if is_in_scope(candidate) else base_url
+    candidate = _join(base_url, _attr(base_tag, "href").strip())
+    return candidate if candidate and is_in_scope(candidate) else base_url
 
 
 def _text(soup: BeautifulSoup) -> str:
@@ -142,7 +142,16 @@ def _resolve(raw: str, base: str) -> str | None:
     href = _WHITESPACE.sub("", raw)
     if not href or href.startswith("#"):
         return None
-    return canonicalize(urljoin(base, href))
+
+    joined = _join(base, href)
+    return canonicalize(joined) if joined is not None else None
+
+
+def _join(base: str, url: str) -> str | None:
+    try:
+        return urljoin(base, url)
+    except ValueError:
+        return None
 
 
 def _attr(tag: Tag, name: str) -> str:

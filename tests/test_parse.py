@@ -348,3 +348,17 @@ def test_malformed_html_still_parses():
     assert "unclosed" in result.text
     assert "text" in result.text
     assert result.out_links == ["http://kennesaw.edu/x"]
+
+
+def test_malformed_link_dropped_but_later_links_kept():
+    html = "<a href='http://[::1/x'>bad</a><a href='/ok'>ok</a>"
+    assert links(html) == ["http://kennesaw.edu/ok"]
+
+
+def test_malformed_base_falls_back_to_page():
+    html = "<base href='http://[::1/'><a href='x'>x</a>"
+    assert links(html) == ["http://kennesaw.edu/x"]
+
+
+def test_malformed_canonical_href_is_none():
+    assert canonical("<link rel='canonical' href='http://[::1/x'>") is None
