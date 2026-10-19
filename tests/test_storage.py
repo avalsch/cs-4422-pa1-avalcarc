@@ -1,6 +1,9 @@
 import io
 import json
 import re
+from pathlib import Path
+
+import pytest
 
 from schema import Stats
 from storage import (
@@ -129,3 +132,31 @@ def test_write_stats_is_indented(tmp_path):
         '  "random_seed": null\n'
         "}\n"
     )
+
+
+def test_write_stats_leaves_nothing_behind(tmp_path):
+    path = tmp_path / "stats.json"
+
+    write_stats(path, make_stats())
+
+    assert list(tmp_path.iterdir()) == [path]
+
+
+def test_write_stats_keeps_the_old_file_when_the_write_fails(tmp_path, monkeypatch):
+    path = tmp_path / "stats.json"
+    previous = make_stats()
+    previous["pages_fetched"] = 1
+    write_stats(path, previous)
+
+    real_write_text = Path.write_text
+
+    def fail(self: Path, data: str, *, encoding: str | None = None) -> None:
+        real_write_text(self, "partial", encoding=encoding)
+        raise OSError("disk full")
+
+    monkeypatch.setattr(Path, "write_text", fail)
+
+    with pytest.raises(OSError):
+        write_stats(path, make_stats())
+
+    assert json.loads(path.read_text()) == previous

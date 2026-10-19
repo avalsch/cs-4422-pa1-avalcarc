@@ -45,4 +45,8 @@ def log_decision(
 
 
 def write_stats(path: Path, stats: Stats) -> None:
-    path.write_text(json.dumps(stats, indent=2) + "\n", encoding="utf-8")
+    # use a tmp file and replace to atomically swap a fully written file,
+    # to avoid leaving a half-written stats.json
+    tmp = path.with_name(path.name + ".tmp")
+    tmp.write_text(json.dumps(stats, indent=2) + "\n", encoding="utf-8")
+    tmp.replace(path)
