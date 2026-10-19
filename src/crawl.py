@@ -47,6 +47,7 @@ def crawl(
         host = urlsplit(target).hostname or ""
         _wait_for_host(host, config.delay, last_request)
         last_request[host] = time.monotonic()
+        log_decision(log_f, EVENT_FETCH, target)
 
     def mark_seen(target: str) -> None:
         seen.add(target)
@@ -63,8 +64,6 @@ def crawl(
 
     while frontier and stats["pages_fetched"] < config.budget:
         url = frontier.popleft()
-
-        log_decision(log_f, EVENT_FETCH, url)
 
         result = fetch(url, config, session, wait=wait)
 

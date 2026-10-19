@@ -149,11 +149,12 @@ def test_dedupes_links_before_fetching(monkeypatch, tmp_path):
 def test_redirect_target_is_not_enqueued_again(monkeypatch, tmp_path):
     fetcher = FakeFetcher({SEED: f"<a href='{PAGE_B}'>B</a>"}, finals={SEED: PAGE_B})
 
-    pages_f, _log_f, stats = run(monkeypatch, fetcher, tmp_path)
+    pages_f, log_f, stats = run(monkeypatch, fetcher, tmp_path)
 
     assert fetcher.calls == [SEED]
     assert [r["url_canonical"] for r in records(pages_f)] == [PAGE_B]
     assert stats["urls_seen"] == 2
+    assert [e["url"] for e in events(log_f) if e["event"] == "fetch"] == [SEED, PAGE_B]
 
 
 def test_redirect_aliases_stored_once(monkeypatch, tmp_path):
