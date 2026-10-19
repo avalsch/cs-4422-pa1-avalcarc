@@ -1,6 +1,7 @@
 from analyze import (
     fetch_gaps,
     q1_patterns,
+    q2_duplicates,
     q3_errors,
     q4_links,
     q8_politeness,
@@ -51,6 +52,46 @@ def test_q4_ranks_in_and_out_links():
     assert "| 1 | http://k/c | 2 |" in text
     assert "| 2 | http://k/s | 2 |" in text
     assert "http://k/off" not in text
+
+
+def test_q2_detects_identical_near_and_self_declared():
+    pages = [
+        {
+            "url_canonical": "http://k/a",
+            "content_hash": "h1",
+            "text": "alpha beta gamma delta epsilon zeta eta theta",
+            "canonical_link": None,
+        },
+        {
+            "url_canonical": "http://k/b",
+            "content_hash": "h1",
+            "text": "alpha beta gamma delta epsilon zeta eta theta",
+            "canonical_link": None,
+        },
+        {
+            "url_canonical": "http://k/c",
+            "content_hash": "h2",
+            "text": "alpha beta gamma delta epsilon zeta eta theta iota",
+            "canonical_link": "http://k/a",
+        },
+        {
+            "url_canonical": "http://k/d",
+            "content_hash": "h3",
+            "text": "completely different words here nothing shared at all",
+            "canonical_link": None,
+        },
+    ]
+
+    text = q2_duplicates(pages, threshold=0.5)
+
+    assert "byte-identical: 2 pages" in text
+    assert "1 duplicate groups" in text
+    assert "near-duplicate: 3 pages" in text
+    assert "2 pairs at Jaccard >= 0.50" in text
+    assert "self-declared canonical: 1 pages" in text
+    assert "identical: http://k/a == http://k/b" in text
+    assert "near: http://k/a ~ http://k/c (Jaccard 0.80)" in text
+    assert "self-declared: http://k/c -> http://k/a" in text
 
 
 def test_q3_ranks_by_count_then_name():

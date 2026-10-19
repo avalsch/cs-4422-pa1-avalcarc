@@ -13,6 +13,7 @@ dependencies = [
     "pandas>=3.0.6",
     "protego>=0.7.0",
     "requests>=2.34.2",
+    "scikit-learn>=1.9.1",
     "truststore>=0.10.5",
     "w3lib>=2.5.0",
 ]

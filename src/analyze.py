@@ -9,11 +9,16 @@ from pathlib import Path
 from typing import Any
 from urllib.parse import parse_qsl, urlsplit
 
+import numpy as np
 import pandas as pd
+from sklearn.feature_extraction.text import CountVectorizer
 
 DEFAULT_PAGES = Path("artifacts/pages.jsonl")
 DEFAULT_LOG = Path("artifacts/crawl.log")
 DEFAULT_STATS = Path("artifacts/stats.json")
+
+DEFAULT_NEAR_DUP = 0.8
+NEAR_DUP_BANDS = (0.9, 0.8, 0.7, 0.5)
 
 
 @dataclass
@@ -136,6 +141,87 @@ def q1_patterns(pages: list[dict[str, Any]], top: int = 15) -> str:
             *rows,
         ]
     )
+
+
+def q2_duplicates(
+    pages: list[dict[str, Any]], threshold: float = DEFAULT_NEAR_DUP
+) -> str:
+    frame = pd.DataFrame(pages)
+    urls = frame["url_canonical"].tolist()
+    hashes = frame["content_hash"].to_numpy()
+
+    groups = [
+        group
+        for group in frame.groupby("content_hash")["url_canonical"].apply(list)
+        if len(group) > 1
+    ]
+    identical_pages = sum(len(group) for group in groups)
+
+    matrix = CountVectorizer(ngram_range=(5, 5), binary=True).fit_transform(
+        frame["text"]
+    )
+
+    # pairwise Jaccard = |A and B| / |A or B|, from the sparse shingle matrix
+    intersection = np.asarray((matrix @ matrix.T).todense(), dtype=float)
+    sizes = np.asarray(matrix.sum(axis=1)).ravel().astype(float)
+    union = sizes[:, None] + sizes[None, :] - intersection
+    similarity = np.divide(
+        intersection, union, out=np.zeros_like(intersection), where=union > 0
+    )
+
+    upper = np.triu_indices(len(frame), k=1)
+    sims = similarity[upper]
+    differing = hashes[upper[0]] != hashes[upper[1]]
+
+    near_pairs = int(((sims >= threshold) & differing).sum())
+    involved = np.argwhere((sims >= threshold) & differing).ravel()
+    near_pages = len(set(upper[0][involved]) | set(upper[1][involved]))
+
+    bands = [(band, int(((sims >= band) & differing).sum())) for band in NEAR_DUP_BANDS]
+
+    canonical = frame["canonical_link"]
+    declared = frame[canonical.notna() & (canonical != frame["url_canonical"])]
+
+    total = len(frame)
+
+    def share(count: int) -> str:
+        return f"{count} pages ({100 * count / total:.1f}%)" if total else "0 pages"
+
+    lines = [
+        "## Q2: duplicate content",
+        "",
+        f"Near-duplicate threshold: {threshold:.2f} (5-gram word shingles, Jaccard).",
+        "",
+        f"- byte-identical: {share(identical_pages)}, {len(groups)} duplicate groups",
+        f"- near-duplicate: {share(near_pages)}, {near_pairs} pairs at Jaccard >= {threshold:.2f}",
+        f"- self-declared canonical: {share(len(declared))}",
+        "",
+        "Non-identical pairs by similarity band:",
+        "",
+        "| Jaccard >= | pairs |",
+        "| --- | --- |",
+        *[f"| {band:.2f} | {count} |" for band, count in bands],
+        "",
+        "Examples:",
+    ]
+
+    if groups:
+        lines.append(f"- identical: {groups[0][0]} == {groups[0][1]}")
+
+    if differing.any():
+        best = int(np.argmax(np.where(differing, sims, -1.0)))
+        lines.append(
+            f"- near: {urls[upper[0][best]]} ~ {urls[upper[1][best]]} "
+            f"(Jaccard {sims[best]:.2f})"
+        )
+
+    if len(declared):
+        row = declared.iloc[0]
+        lines.append(
+            f"- self-declared: {row['url_canonical']} -> {row['canonical_link']}"
+        )
+
+    return "\n".join(lines)
 
 
 def q3_errors(log: list[dict[str, Any]]) -> str:
@@ -279,6 +365,7 @@ def main(argv: list[str] | None = None) -> int:
             [
                 header(pages, log, stats),
                 q1_patterns(pages),
+                q2_duplicates(pages),
                 q3_errors(log),
                 q4_links(pages),
                 q8_politeness(log, stats),
