@@ -4,6 +4,22 @@ Written answers to Q1–Q8. The generated numbers behind them are in the appendi
 
 ## Q1: URL patterns that ate the budget
 
+- Q1.a. The budget was spent on finite directory sections, not query patterns. Three patterns account for a quarter of the crawl: `campus.kennesaw.edu/colleges-departments/ccse` (55 pages), `campus.kennesaw.edu/current-students/student-affairs` (47), and `campus.kennesaw.edu/colleges-departments/coles` (23), 125/500 pages (25%). The distinct-hash column shows that these are real sections, not traps: 49 distinct bodies across 55 pages, 39/47, 23/23. Only 2 of the 500 pages have a query string at all, so no parameterised pattern took a meaningful share of the budget.
+
+- Q1.b. The sections above are finite -- a department directory runs out of pages. The patterns that could run forever are the parameterised ones, and manual checks show they accept arbitrary values:
+
+  | URL | status | bytes | sha256[:16] |
+  | --- | --- | --- | --- |
+  | `catalog.kennesaw.edu/index.php?catoid=1` | 200 | 73,048 | `e67bf86e55ee4e4d` |
+  | `catalog.kennesaw.edu/index.php?catoid=9999` | 200 | 73,054 | `3bfddc7c5e3292db` |
+  | `calendar.kennesaw.edu/calendar/day?days=1` | 200 | 150,386 | `413d294fad14524b` |
+  | `calendar.kennesaw.edu/calendar/day?days=3650` | 200 | 175,223 | `932bce3b7de9115d` |
+  | `programfinder.kennesaw.edu/s/search.html?collection=…` | 200 | 50,702 | — |
+
+  Each value returns 200 with a different body, so `catoid`, `days`, and the programfinder facets are unbounded, not traps.
+
+- Q1.c. Allowed, with no explicit cap. First, canonicalization drops tracking parameters (`utm_*`, `gclid`, `fbclid`) and sorts the rest, so session and campaign variants collapse before they reach the frontier. Second, `robots.txt` blocked the search endpoints that generate these spaces (`programfinder`, `calendar`, `catalog`'s `search_advanced.php`), so the unbounded patterns used roughly 0% of the budget. Intentional, not luck: a 500-page budget was filled with finite sections first. But the risk is real; `catalog...?catoid=` was allowed by robots, and a single page linking many `catoid` values would have spent the budget there. A host or parameter cap would bound that, but it would also cut the long tail of small department sites (patterns 3–15 in the appendix).
+
 ## Q2: Duplicate-content census
 
 ## Q3: Error taxonomy
