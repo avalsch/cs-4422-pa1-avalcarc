@@ -331,13 +331,15 @@ def test_q8_politeness_section():
         },
     ]
     stats = {"pages_fetched": 4, "wall_clock_seconds": 8.0, "delay": 1.0}
+    pages = [{"url_canonical": "http://kennesaw.edu/a"}]
 
-    text = q8_politeness(log, stats)
+    text = q8_politeness(log, stats, pages)
 
     assert "2 hosts, minimum gap 0.50 s, 1 below the 1.00 s floor." in text
     assert "| cs.kennesaw.edu | 0.50 |" in text
     assert "| kennesaw.edu | 1.00 |" in text
-    assert "| kennesaw.edu | 1 |" in text
-    assert "| campus.kennesaw.edu | 1 |" in text
+    explicit = text.split("no pages served")[0]
+    assert "| kennesaw.edu | 1 | 1 |" in explicit
+    assert "| campus.kennesaw.edu | 1 |" not in explicit
     assert "4 pages / 8.0 s = 0.50 pages/s" in text
     assert "4 requests / 8.0 s = 0.50 requests/s" in text

@@ -571,7 +571,9 @@ def fetch_gaps(log: list[dict[str, Any]]) -> dict[str, float]:
     return gaps
 
 
-def q8_politeness(log: list[dict[str, Any]], stats: dict[str, Any]) -> str:
+def q8_politeness(
+    log: list[dict[str, Any]], stats: dict[str, Any], pages: list[dict[str, Any]]
+) -> str:
     gaps = fetch_gaps(log)
     delay = stats["delay"]
     below = sum(1 for gap in gaps.values() if gap < delay)
@@ -582,10 +584,16 @@ def q8_politeness(log: list[dict[str, Any]], stats: dict[str, Any]) -> str:
         for e in log
         if e["event"] == "skip" and e["failure_reason"] == "robots_blocked"
     )
+    served = Counter(urlsplit(p["url_canonical"]).hostname or "" for p in pages)
+
+    # a host that also served pages had a reachable robots.txt with explicit
+    # rules; one that served none was unreachable (we then disallow everything)
+    explicit = [(h, c) for h, c in blocked.most_common() if served.get(h)]
+    unreachable = [(h, c) for h, c in blocked.most_common() if not served.get(h)]
 
     requests = sum(1 for e in log if e["event"] == "fetch")
     wall = stats["wall_clock_seconds"]
-    pages = stats["pages_fetched"]
+    page_count = stats["pages_fetched"]
 
     return "\n".join(
         [
@@ -605,12 +613,21 @@ def q8_politeness(log: list[dict[str, Any]], stats: dict[str, Any]) -> str:
             "",
             "**Q8.b robots.txt.**",
             "",
+            "Hosts with explicit rules (robots.txt reachable, host also served pages):",
+            "",
+            "| host | blocked | pages |",
+            "| --- | --- | --- |",
+            *[f"| {h} | {c} | {served[h]} |" for h, c in explicit],
+            "",
+            "Hosts with no pages served (robots.txt unreachable, or a blanket disallow):",
+            "",
             "| host | blocked |",
             "| --- | --- |",
-            *[f"| {h} | {c} |" for h, c in blocked.most_common()],
+            *[f"| {h} | {c} |" for h, c in unreachable],
             "",
             (
-                f"**Q8.c request rate.** {pages} pages / {wall:.1f} s = {pages / wall:.2f} pages/s; "
+                f"**Q8.c request rate.** {page_count} pages / {wall:.1f} s = "
+                f"{page_count / wall:.2f} pages/s; "
                 f"{requests} requests / {wall:.1f} s = {requests / wall:.2f} requests/s."
             ),
         ]
@@ -635,7 +652,7 @@ def main(argv: list[str] | None = None) -> int:
                 q5_boilerplate(pages, config.cache_dir),
                 q6_words(pages, config.cache_dir),
                 q7_tfidf(pages, config.cache_dir, stats),
-                q8_politeness(log, stats),
+                q8_politeness(log, stats, pages),
             ]
         )
     )
