@@ -19,7 +19,6 @@ class Config:
     max_bytes: int = DEFAULT_MAX_BYTES
     max_redirects: int = DEFAULT_MAX_REDIRECT
     timeout: float = DEFAULT_TIMEOUT
-    checkpoint_path: Path | None = None
     random_seed: int | None = None
 
     def __post_init__(self) -> None:

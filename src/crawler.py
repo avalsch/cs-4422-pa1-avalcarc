@@ -71,14 +71,6 @@ def parse_args() -> Config:
     )
 
     parser.add_argument(
-        "-c",
-        "--checkpoint",
-        type=Path,
-        default=None,
-        help="path to checkpoint file for resume support",
-    )
-
-    parser.add_argument(
         "--max-bytes",
         type=int,
         default=DEFAULT_MAX_BYTES,
@@ -120,7 +112,6 @@ def parse_args() -> Config:
         user_agent=args.user_agent,
         max_bytes=args.max_bytes,
         timeout=args.timeout,
-        checkpoint_path=args.checkpoint,
         random_seed=args.random_seed,
     )
 
