@@ -119,7 +119,10 @@ def test_follows_discovered_links(monkeypatch, tmp_path):
     pages_f, log_f, _stats = run(monkeypatch, fetcher, tmp_path)
 
     assert [r["url_canonical"] for r in records(pages_f)] == [SEED, PAGE_A]
-    assert [e["url"] for e in events(log_f) if e["event"] == "enqueue"] == [SEED, PAGE_A]
+    assert [e["url"] for e in events(log_f) if e["event"] == "enqueue"] == [
+        SEED,
+        PAGE_A,
+    ]
 
 
 def test_stops_at_budget(monkeypatch, tmp_path):
