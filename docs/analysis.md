@@ -106,6 +106,26 @@ Boilerplate is removed with trafilatura, run over the cached HTML content. Chose
 
 ## Q7: TF-IDF keywords
 
+The five sampled pages (random_seed 42) are in the appendix. Their keywords mostly work -- the counseling page gets `counseling, psychological, emotions`, the iTeach page gets `iteach, instructional, coaches` -- but three failure modes show up.
+
+The worst is `campus.kennesaw.edu/policies-governance/staff-senate/` (202 words):
+
+> before: `staff` (0.53), `senate` (0.48), `and` (0.18), `body` (0.17), `the` (0.14)
+
+`staff` and `senate` are exactly right, but two of the five are stopwords (`and`, `the`): the vectorizer has no stopword filter, so a function word that is merely uncommon across 500 pages still earns a high IDF and lands in the top five. The fix is to add `stop_words="english"`, `min_df=2` (drop terms that appear in a single document), and `sublinear_tf=True`:
+
+> after: `senate` (0.31), `body` (0.20), `staff` (0.20), `meetings` (0.17), `updated` (0.17)
+
+The stopwords are gone and `meetings`/`updated` are real content; `body` is still generic, which is honest; the page is short and thin on distinctive terms.
+
+The other sampled pages show the other classic failures:
+
+- Numbers as keywords: the counseling page (40 words) returns `6600` (a phone number) and the SMART-center page (55 words) returns `80`; numeric tokens survive the tokenizer and carry no meaning.
+- Menu pages: the campus root (104 words) returns `find, index, tools, policies`, which is navigation chrome, not content.
+- Abbreviations: the iTeach page returns `pd`.
+
+Filtering very short pages removes the thinnest of these: 20 of 500 pages are under 50 words, and the sample's counseling page (40 words) is one of them, so a 50-word cutoff would drop that failure mode from the sample, at the cost of never seeing short pages at all.
+
 ## Q8: Politeness evidence
 
 ---
