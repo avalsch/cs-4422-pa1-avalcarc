@@ -133,8 +133,8 @@ def main() -> int:
     stats_path = config.output_dir / "stats.json"
 
     with (
-        open(pages_path, "a", buffering=1) as pages,
-        open(log_path, "a", buffering=1) as log,
+        open(pages_path, "a", buffering=1, encoding="utf-8", newline="\n") as pages,
+        open(log_path, "a", buffering=1, encoding="utf-8", newline="\n") as log,
     ):
         start_time = time.time()
 
