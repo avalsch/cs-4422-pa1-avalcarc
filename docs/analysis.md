@@ -53,9 +53,10 @@ Examples:
 
 | rank | failure_reason | count |
 | --- | --- | --- |
-| 1 | http_error | 9 |
+| 1 | http_error (404) | 7 |
 | 2 | out_of_scope | 7 |
-| 3 | wrong_content_type | 1 |
+| 3 | http_error (403) | 2 |
+| 4 | wrong_content_type | 1 |
 
 Total: 17 errors.
 
