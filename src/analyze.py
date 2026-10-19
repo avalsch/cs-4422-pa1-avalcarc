@@ -20,6 +20,7 @@ from sklearn.feature_extraction.text import (
     TfidfVectorizer,
 )
 
+from robots import ROBOTS_UNREACHABLE
 from storage import cache_path
 
 DEFAULT_PAGES = Path("artifacts/pages.jsonl")
@@ -585,11 +586,16 @@ def q8_politeness(
         if e["event"] == "skip" and e["failure_reason"] == "robots_blocked"
     )
     served = Counter(urlsplit(p["url_canonical"]).hostname or "" for p in pages)
+    unreachable = {
+        urlsplit(e["url"]).hostname or ""
+        for e in log
+        if e["event"] == "error" and e["failure_reason"] == ROBOTS_UNREACHABLE
+    }
 
-    # a host that also served pages had a reachable robots.txt with explicit
-    # rules; one that served none was unreachable (we then disallow everything)
-    explicit = [(h, c) for h, c in blocked.most_common() if served.get(h)]
-    unreachable = [(h, c) for h, c in blocked.most_common() if not served.get(h)]
+    # hosts whose robots.txt was unreachable got a blanket disallow from us;
+    # the rest blocked us with explicit rules
+    explicit = [(h, c) for h, c in blocked.most_common() if h not in unreachable]
+    unreached = [(h, c) for h, c in blocked.most_common() if h in unreachable]
 
     requests = sum(1 for e in log if e["event"] == "fetch")
     wall = stats["wall_clock_seconds"]
@@ -613,17 +619,17 @@ def q8_politeness(
             "",
             "**Q8.b robots.txt.**",
             "",
-            "Hosts with explicit rules (robots.txt reachable, host also served pages):",
+            "Hosts with explicit rules (robots.txt reachable):",
             "",
             "| host | blocked | pages |",
             "| --- | --- | --- |",
-            *[f"| {h} | {c} | {served[h]} |" for h, c in explicit],
+            *[f"| {h} | {c} | {served.get(h, 0)} |" for h, c in explicit],
             "",
-            "Hosts with no pages served (robots.txt unreachable, or a blanket disallow):",
+            "Hosts with robots.txt unreachable (disallow-all policy):",
             "",
             "| host | blocked |",
             "| --- | --- |",
-            *[f"| {h} | {c} |" for h, c in unreachable],
+            *[f"| {h} | {c} |" for h, c in unreached],
             "",
             (
                 f"**Q8.c request rate.** {page_count} pages / {wall:.1f} s = "

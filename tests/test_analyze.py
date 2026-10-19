@@ -325,6 +325,11 @@ def test_q8_politeness_section():
             "url": "http://campus.kennesaw.edu/private",
         },
         {
+            "event": "error",
+            "failure_reason": "robots_unreachable",
+            "url": "http://campus.kennesaw.edu/robots.txt",
+        },
+        {
             "event": "skip",
             "failure_reason": "already_seen",
             "url": "http://kennesaw.edu/x",
@@ -338,8 +343,9 @@ def test_q8_politeness_section():
     assert "2 hosts, minimum gap 0.50 s, 1 below the 1.00 s floor." in text
     assert "| cs.kennesaw.edu | 0.50 |" in text
     assert "| kennesaw.edu | 1.00 |" in text
-    explicit = text.split("no pages served")[0]
+    explicit, _, unreachable = text.partition("robots.txt unreachable")
     assert "| kennesaw.edu | 1 | 1 |" in explicit
-    assert "| campus.kennesaw.edu | 1 |" not in explicit
+    assert "campus.kennesaw.edu" not in explicit
+    assert "| campus.kennesaw.edu | 1 |" in unreachable
     assert "4 pages / 8.0 s = 0.50 pages/s" in text
     assert "4 requests / 8.0 s = 0.50 requests/s" in text
