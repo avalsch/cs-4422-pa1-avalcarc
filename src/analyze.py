@@ -37,7 +37,7 @@ class AnalyzeConfig:
 
 
 def parse_args(argv: list[str] | None = None) -> AnalyzeConfig:
-    parser = ArgumentParser(description="")  # TODO: description
+    parser = ArgumentParser(description="Stage two: compute Q1-Q8 numbers from crawl artifacts")
 
     parser.add_argument(
         "-p",

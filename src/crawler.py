@@ -24,7 +24,7 @@ from storage import (
 
 
 def parse_args() -> Config:
-    parser = ArgumentParser(description="")  # TODO: description
+    parser = ArgumentParser(description="Stage one: crawl seed URLs into artifacts")
 
     parser.add_argument(
         "seeds",
