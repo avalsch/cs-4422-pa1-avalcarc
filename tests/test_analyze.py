@@ -24,9 +24,15 @@ from storage import write_cached_html
 def test_shape_replaces_number_date_and_id_segments():
     uuid = "123e4567-e89b-12d3-a456-426614174000"
 
-    assert shape("http://kennesaw.edu/a/12/b") == "kennesaw.edu/a/<num>/b"
+    assert shape("http://kennesaw.edu/a/12/b", depth=3) == "kennesaw.edu/a/<num>/b"
     assert shape("http://kennesaw.edu/a/2024-01-02") == "kennesaw.edu/a/<date>"
     assert shape(f"http://kennesaw.edu/a/{uuid}") == "kennesaw.edu/a/<id>"
+
+
+def test_shape_truncates_to_depth():
+    assert shape("http://kennesaw.edu/a/b/c/d") == "kennesaw.edu/a/b"
+    assert shape("http://kennesaw.edu/a/b/c/d", depth=3) == "kennesaw.edu/a/b/c"
+    assert shape("http://kennesaw.edu/") == "kennesaw.edu/"
 
 
 def test_shape_keeps_query_names_without_values():

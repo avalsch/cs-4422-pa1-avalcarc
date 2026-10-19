@@ -30,6 +30,7 @@ DEFAULT_CACHE = Path("cache")
 DEFAULT_NEAR_DUP = 0.8
 NEAR_DUP_BANDS = (0.9, 0.8, 0.7, 0.5)
 MIN_WORDS = 50
+DEFAULT_PATTERN_DEPTH = 2
 
 
 @dataclass
@@ -130,9 +131,10 @@ def _shape_segment(segment: str) -> str:
     return segment
 
 
-def shape(url: str) -> str:
+def shape(url: str, depth: int = DEFAULT_PATTERN_DEPTH) -> str:
     parts = urlsplit(url)
-    path = "/".join(_shape_segment(s) for s in parts.path.split("/"))
+    segments = [s for s in parts.path.split("/") if s][:depth]
+    path = "/" + "/".join(_shape_segment(s) for s in segments)
     names = sorted({name for name, _ in parse_qsl(parts.query, keep_blank_values=True)})
     query = f"?{'&'.join(names)}" if names else ""
 
@@ -160,7 +162,8 @@ def q1_patterns(pages: list[dict[str, Any]], top: int = 15) -> str:
             "## Q1: URL patterns by budget",
             "",
             (
-                f"{len(frame)} pages across {len(grouped)} patterns; "
+                f"Grouped by host + first {DEFAULT_PATTERN_DEPTH} path segments; "
+                f"{len(frame)} pages across {len(grouped)} patterns, "
                 f"top {min(top, len(grouped))} by pages:"
             ),
             "",
