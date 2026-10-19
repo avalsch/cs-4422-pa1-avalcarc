@@ -14,7 +14,11 @@ from urllib.parse import parse_qsl, urlsplit
 import numpy as np
 import pandas as pd
 import trafilatura
-from sklearn.feature_extraction.text import CountVectorizer, TfidfVectorizer
+from sklearn.feature_extraction.text import (
+    ENGLISH_STOP_WORDS,
+    CountVectorizer,
+    TfidfVectorizer,
+)
 
 from storage import cache_path
 
@@ -37,7 +41,9 @@ class AnalyzeConfig:
 
 
 def parse_args(argv: list[str] | None = None) -> AnalyzeConfig:
-    parser = ArgumentParser(description="Stage two: compute Q1-Q8 numbers from crawl artifacts")
+    parser = ArgumentParser(
+        description="Stage two: compute Q1-Q8 numbers from crawl artifacts"
+    )
 
     parser.add_argument(
         "-p",
@@ -472,6 +478,10 @@ def _keywords(
     return result
 
 
+def _keyword_penalty(terms: list[tuple[str, float]]) -> int:
+    return sum(1 for word, _ in terms if word in ENGLISH_STOP_WORDS or word.isdigit())
+
+
 def q7_tfidf(
     pages: list[dict[str, Any]],
     cache_dir: Path,
@@ -486,7 +496,8 @@ def q7_tfidf(
     picks = sorted(rng.sample(range(len(texts)), min(sample, len(texts))))
 
     before = _keywords(texts, picks, TfidfVectorizer())
-    worst = min(picks, key=lambda index: lengths[index])
+    penalties = {index: _keyword_penalty(before[index]) for index in picks}
+    worst = max(picks, key=lambda index: (penalties[index], -lengths[index], -index))
     after = _keywords(texts, [worst], TfidfVectorizer(min_df=2, sublinear_tf=True))[
         worst
     ]
@@ -511,7 +522,10 @@ def q7_tfidf(
             "| --- | --- | --- | --- |",
             *rows,
             "",
-            f"Worst sampled page: {urls[worst]} ({lengths[worst]} words).",
+            (
+                f"Worst sampled page: {urls[worst]} ({lengths[worst]} words, "
+                f"{penalties[worst]} of 5 keywords are stopwords or numbers)."
+            ),
             f"- before: {keywords(before[worst])}",
             f"- after min_df=2 + sublinear_tf: {keywords(after)}",
             "",

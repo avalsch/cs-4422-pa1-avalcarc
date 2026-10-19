@@ -3,6 +3,7 @@ from sklearn.feature_extraction.text import TfidfVectorizer
 import analyze
 from analyze import (
     _cleaned_words,
+    _keyword_penalty,
     _keywords,
     _term_counts,
     fetch_gaps,
@@ -181,6 +182,11 @@ def test_keywords_returns_top_scoring_terms():
     result = _keywords(texts, [0], TfidfVectorizer())
 
     assert next(word for word, _ in result[0]) == "alpha"
+
+
+def test_keyword_penalty_counts_stopwords_and_numbers():
+    assert _keyword_penalty([("you", 0.5), ("2027", 0.4), ("computing", 0.3)]) == 2
+    assert _keyword_penalty([("computing", 0.5), ("major", 0.4)]) == 0
 
 
 def test_q7_is_deterministic_per_seed(monkeypatch, tmp_path):

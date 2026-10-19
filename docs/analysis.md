@@ -193,9 +193,9 @@ Sampled 5 pages with random_seed = 42.
 | 4 | 268 | https://campus.kennesaw.edu/colleges-departments/graduate/ | graduate (0.30), and (0.28), to (0.21), resources (0.20), college (0.18) |
 | 5 | 255 | https://www.kennesaw.edu/admissions/undergraduate/admission-requirements/transfer.php | 2027 (0.40), transfer (0.38), sent (0.24), 2026 (0.22), application (0.20) |
 
-Worst sampled page: https://campus.kennesaw.edu/colleges-departments/ccse/ (239 words).
-- before: major (0.30), declare (0.28), computing (0.28), cse (0.21), fye (0.21)
-- after min_df=2 + sublinear_tf: computing (0.22), major (0.21), programming (0.19), assistants (0.17), problem (0.17)
+Worst sampled page: https://campus.kennesaw.edu/current-students/ (384 words, 3 of 5 keywords are stopwords or numbers).
+- before: you (0.23), to (0.22), core (0.21), do (0.20), advisor (0.18)
+- after min_df=2 + sublinear_tf: core (0.19), impacts (0.17), advisor (0.16), my (0.16), do (0.14)
 
 0 of 50 pages are shorter than 50 words.
 
