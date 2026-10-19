@@ -3,7 +3,10 @@ import time
 from argparse import ArgumentParser
 from pathlib import Path
 
+import requests
+
 from canonicalize import canonicalize
+from crawl import crawl
 from crawl_config import (
     DEFAULT_BUDGET,
     DEFAULT_DELAY,
@@ -14,10 +17,9 @@ from crawl_config import (
     Config,
 )
 from schema import Stats
-from storage import write_stats
-
-
-def crawl(_config, _pages_f, _log_f, _stats, _stats_path, _start_time): ...
+from storage import (
+    write_stats,
+)
 
 
 def parse_args() -> Config:
@@ -135,6 +137,7 @@ def main() -> int:
     with (
         open(pages_path, "w", buffering=1, encoding="utf-8", newline="\n") as pages,
         open(log_path, "w", buffering=1, encoding="utf-8", newline="\n") as log,
+        requests.Session() as session,
     ):
         start_time = time.time()
 
@@ -147,7 +150,7 @@ def main() -> int:
         }
 
         try:
-            crawl(config, pages, log, stats, stats_path, start_time)
+            crawl(config, session, pages, log, stats, stats_path, start_time)
         except KeyboardInterrupt:
             print("\nInterrupted - flushing and writing stats.", file=sys.stderr)
         finally:
