@@ -1,4 +1,5 @@
 import json
+import re
 import sys
 from argparse import ArgumentParser
 from collections import Counter, defaultdict
@@ -6,7 +7,9 @@ from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
 from typing import Any
-from urllib.parse import urlsplit
+from urllib.parse import parse_qsl, urlsplit
+
+import pandas as pd
 
 DEFAULT_PAGES = Path("artifacts/pages.jsonl")
 DEFAULT_LOG = Path("artifacts/crawl.log")
@@ -72,6 +75,65 @@ def header(
             f"- URLs seen: {stats['urls_seen']}",
             f"- wall clock: {stats['wall_clock_seconds']:.1f} s",
             f"- logged decisions: {len(log)}",
+        ]
+    )
+
+
+_DIGITS = re.compile(r"^\d+$")
+_DATE = re.compile(r"^\d{4}(-\d{2}(-\d{2})?)?$")
+_UUID = re.compile(
+    r"^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$", re.IGNORECASE
+)
+
+
+def _shape_segment(segment: str) -> str:
+    if _UUID.match(segment):
+        return "<id>"
+
+    if _DATE.match(segment):
+        return "<date>"
+
+    if _DIGITS.match(segment):
+        return "<num>"
+
+    return segment
+
+
+def shape(url: str) -> str:
+    parts = urlsplit(url)
+    path = "/".join(_shape_segment(s) for s in parts.path.split("/"))
+    names = sorted({name for name, _ in parse_qsl(parts.query, keep_blank_values=True)})
+    query = f"?{'&'.join(names)}" if names else ""
+
+    return f"{parts.hostname}{path}{query}"
+
+
+def q1_patterns(pages: list[dict[str, Any]], top: int = 15) -> str:
+    frame = pd.DataFrame(pages)
+    frame["pattern"] = frame["url_canonical"].map(shape)
+
+    grouped = (
+        frame.groupby("pattern")
+        .agg(pages=("url_canonical", "size"), hashes=("content_hash", "nunique"))
+        .sort_values(["pages", "pattern"], ascending=[False, True])
+        .reset_index()
+    )
+
+    rows = [
+        f"| {i} | `{r.pattern}` | {r.pages} | {r.hashes} |"
+        for i, r in enumerate(grouped.head(top).itertuples(index=False), 1)
+    ]
+
+    return "\n".join(
+        [
+            "## Q1: URL patterns by budget",
+            "",
+            f"{len(frame)} pages across {len(grouped)} patterns; top {min(top, len(grouped))}"
+            " by pages:",
+            "",
+            "| rank | pattern | pages | distinct hashes |",
+            "| --- | --- | --- | --- |",
+            *rows,
         ]
     )
 
@@ -169,6 +231,7 @@ def main(argv: list[str] | None = None) -> int:
         "\n\n".join(
             [
                 header(pages, log, stats),
+                q1_patterns(pages),
                 q3_errors(log),
                 q8_politeness(log, stats),
             ]

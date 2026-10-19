@@ -1,4 +1,32 @@
-from analyze import fetch_gaps, q3_errors, q8_politeness
+from analyze import fetch_gaps, q1_patterns, q3_errors, q8_politeness, shape
+
+
+def test_shape_replaces_number_date_and_id_segments():
+    uuid = "123e4567-e89b-12d3-a456-426614174000"
+
+    assert shape("http://kennesaw.edu/a/12/b") == "kennesaw.edu/a/<num>/b"
+    assert shape("http://kennesaw.edu/a/2024-01-02") == "kennesaw.edu/a/<date>"
+    assert shape(f"http://kennesaw.edu/a/{uuid}") == "kennesaw.edu/a/<id>"
+
+
+def test_shape_keeps_query_names_without_values():
+    assert shape("http://kennesaw.edu/s?b=2&a=1") == "kennesaw.edu/s?a&b"
+    assert shape("http://kennesaw.edu/s") == "kennesaw.edu/s"
+
+
+def test_q1_ranks_patterns_by_pages_and_counts_hashes():
+    pages = [
+        {"url_canonical": "http://kennesaw.edu/cal/1", "content_hash": "h1"},
+        {"url_canonical": "http://kennesaw.edu/cal/2", "content_hash": "h1"},
+        {"url_canonical": "http://kennesaw.edu/cal/3", "content_hash": "h2"},
+        {"url_canonical": "http://kennesaw.edu/about", "content_hash": "h3"},
+    ]
+
+    text = q1_patterns(pages)
+
+    assert "4 pages across 2 patterns" in text
+    assert "| 1 | `kennesaw.edu/cal/<num>` | 3 | 2 |" in text
+    assert "| 2 | `kennesaw.edu/about` | 1 | 1 |" in text
 
 
 def test_q3_ranks_by_count_then_name():
