@@ -1,4 +1,26 @@
-# Stage two: analysis numbers
+# CS 4422 PA1 Analysis
+
+Written answers to Q1–Q8. The generated numbers behind them are in the appendix.
+
+## Q1: URL patterns that ate the budget
+
+## Q2: Duplicate-content census
+
+## Q3: Error taxonomy
+
+## Q4: Top pages by in- and out-links
+
+## Q5: Boilerplate removal
+
+## Q6: Text statistics and Zipf
+
+## Q7: TF-IDF keywords
+
+## Q8: Politeness evidence
+
+---
+
+# Appendix: Generated output
 
 - pages: 500 in pages.jsonl, 500 in stats.json
 - URLs seen: 6663
