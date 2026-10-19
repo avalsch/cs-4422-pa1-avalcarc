@@ -43,10 +43,18 @@ def crawl(
     stored: set[str] = set()
     last_request: dict[str, float] = {}
     crawl_delays: dict[str, float] = {}
+    skip_logged: set[str] = set()
 
     def mark_seen(target: str) -> None:
         seen.add(target)
         stats["urls_seen"] = len(seen)
+
+    def log_skip_once(target: str, reason: str) -> None:
+        if target in skip_logged:
+            return
+
+        skip_logged.add(target)
+        log_decision(log_f, EVENT_SKIP, target, failure_reason=reason)
 
     def wait(target: str) -> None:
         host = urlsplit(target).hostname or ""
@@ -66,19 +74,19 @@ def crawl(
         if target not in seen:
             mark_seen(target)
             stats["robots_skips"] += 1
-            log_decision(log_f, EVENT_SKIP, target, failure_reason=ERR_ROBOTS)
+            log_skip_once(target, ERR_ROBOTS)
 
         return False
 
     for seed in config.seeds:
         if seed in seen:
-            log_decision(log_f, EVENT_SKIP, seed, failure_reason="already_seen")
+            log_skip_once(seed, "already_seen")
             continue
 
         if not policy.can_fetch(seed):
             mark_seen(seed)
             stats["robots_skips"] += 1
-            log_decision(log_f, EVENT_SKIP, seed, failure_reason=ERR_ROBOTS)
+            log_skip_once(seed, ERR_ROBOTS)
             continue
 
         mark_seen(seed)
@@ -118,13 +126,13 @@ def crawl(
 
         for link in parsed.out_links:
             if link in seen:
-                log_decision(log_f, EVENT_SKIP, link, failure_reason="already_seen")
+                log_skip_once(link, "already_seen")
                 continue
 
             if not policy.can_fetch(link):
                 mark_seen(link)
                 stats["robots_skips"] += 1
-                log_decision(log_f, EVENT_SKIP, link, failure_reason=ERR_ROBOTS)
+                log_skip_once(link, ERR_ROBOTS)
                 continue
 
             mark_seen(link)
